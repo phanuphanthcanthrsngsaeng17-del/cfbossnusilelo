@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>🎮 เกมทายตัวเลข — จบหลักสูตร!</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: sans-serif;
+            padding: 40px 20px;
+            color: #fff;
+            min-height: 100vh;
+            text-align: center;
+        }
+        h1 { color: #fbbf24; font-size: 28px; margin-bottom: 30px; }
+        .box {
+            background: #0f3460;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 450px;
+            margin: 0 auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        input {
+            padding: 14px;
+            font-size: 20px;
+            border-radius: 8px;
+            border: none;
+            width: 180px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #e2e8f0;
+            color: #1a1a2e;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        button.green { background: #10b981; }
+        button.red { background: #ef4444; }
+        #feedback {
+            font-size: 22px;
+            margin: 20px 0;
+            min-height: 40px;
+            font-weight: bold;
+        }
+        #attempts {
+            color: #fbbf24;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .hidden { display: none !important; }
+        .win { color: #10b981; }
+        .high { color: #f97316; }
+        .low { color: #3b82f6; }
+        .duplicate { color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <h1>🎮 เกมทายตัวเลข 1–100</h1>
+
+    <div class="box">
+        <p>คอมพิวเตอร์สุ่มเลข 1–100 ลงในใจ 💭</p>
+        <p>ทายเลข: <strong id="hint">พิมพ์ตัวเลข 1–100 แล้วกดทาย!</strong></p>
+
+        <input type="number" id="guessInput" min="1" max="100" placeholder="1–100">
+        <br><br>
+        <button onclick="checkGuess()">🎯 ทาย!</button>
+        <button class="red" onclick="resetGame()">🔄 เริ่มใหม่</button>
+
+        <div id="feedback"></div>
+        <div id="attempts">ครั้งที่: 0</div>
+
+        <div id="winBox" class="hidden">
+            <p class="win">🎉 เยี่ยม! ทายถูกต้อง!</p>
+            <button class="green" onclick="resetGame()">🎮 เล่นอีกครั้ง</button>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================
+        // ✅ ตัวแปรหลัก — สุ่มเลขลับ 1–100
+        // ==============================================
+        let secret = Math.floor(Math.random() * 100) + 1; // 1–100
+        let attempts = 0;
+        let lastGuess = null; // เก็บเลขที่ทายล่าสุด — สำหรับโบนัส
+
+        // ==============================================
+        // ✅ ฟังก์ชันตรวจคำตอบ — if-else + DOM
+        // ==============================================
+        function checkGuess() {
+            // 1. อ่านค่าจาก input + แปลงเป็นตัวเลข
+            const input = document.getElementById("guessInput");
+            const guess = Number(input.value);
+
+            // 🔒 ป้องกันค่าผิดพลาด
+            if (!guess || guess < 1 || guess > 100) {
+                document.getElementById("feedback").innerHTML = "⚠️ กรุณาใส่ตัวเลข 1–100 เท่านั้น!";
+                input.value = "";
+                return;
+            }
+
+            // 🎁 โบนัส: ตรวจสอบเลขซ้ำ
+            if (guess === lastGuess) {
+                document.getElementById("feedback").innerHTML = `<span class="duplicate">🔄 ทายซ้ำแล้ว! ลองเลขอื่นดูนะ</span>`;
+                return;
+            }
+            lastGuess = guess; // บันทึกเลขล่าสุด
+
+            // 2. นับจำนวนครั้งที่ทาย
+            attempts = attempts + 1;
+            document.getElementById("attempts").textContent = "ครั้งที่: " + attempts;
+
+            // 3. เปรียบเทียบกับเลขลับ — if-else ตามที่เรียน!
+            const feedback = document.getElementById("feedback");
+            if (guess > secret) {
+                feedback.innerHTML = `<span class="high">⬇️ ต่ำลงมา! ${guess} มากไปกว่านี้</span>`;
+            } else if (guess < secret) {
+                feedback.innerHTML = `<span class="low">⬆️ สูงขึ้น! ${guess} น้อยไปกว่านี้</span>`;
+            } else {
+                // ✅ ถูกต้อง!
+                feedback.innerHTML = `<span class="win">🎊 ถูกต้อง! เจอเลข ${secret} ในครั้งที่ ${attempts}!</span>`;
+                document.getElementById("winBox").classList.remove("hidden");
+            }
+
+            // ล้างช่องใส่ตัวเลขให้พร้อมทายต่อ
+            input.value = "";
+            input.focus();
+        }
+
+        // ==============================================
+        // ✅ ฟังก์ชันเริ่มเกมใหม่ — รีเซ็ตทุกอย่าง
+        // ==============================================
+        function resetGame() {
+            secret = Math.floor(Math.random() * 100) + 1; // สุ่มเลขใหม่
+            attempts = 0;
+            lastGuess = null;
+            document.getElementById("feedback").innerHTML = "";
+            document.getElementById("attempts").textContent = "ครั้งที่: 0";
+            document.getElementById("guessInput").value = "";
+            document.getElementById("winBox").classList.add("hidden");
+            document.getElementById("hint").textContent = "พิมพ์ตัวเลข 1–100 แล้วกดทาย!";
+        }
+    </script>
+
+</body>
+</html>

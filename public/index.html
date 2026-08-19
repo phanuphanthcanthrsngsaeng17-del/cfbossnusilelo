@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CF Bossnusilelo V.1</title>
+<style>
+  :root{
+    --bg:#0f1021; --panel:#171834; --bubble:#232450; --bubble2:#3b2e6e;
+    --accent:#a78bfa; --accent2:#f472b6; --text:#f1eefe; --dim:#9a96c9;
+    --grad:linear-gradient(135deg,#5b21b6,#9d174d);
+    --room-glow:rgba(124,58,237,.4);
+    --c-silelo:#c4b5fd; --c-teacher:#7dd3fc;
+    --bg-silelo:#2a2150; --bg-teacher:#123a52;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; display:flex; flex-direction:column; transition:background .4s}
+  header{display:flex; align-items:center; gap:12px; padding:14px 16px; background:rgba(23,24,52,.9); border-bottom:1px solid #2b2c58; backdrop-filter:blur(8px); position:sticky; top:0; z-index:10; transition:background .4s}
+  .logo{width:42px;height:42px;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;flex:none; box-shadow:0 4px 14px var(--room-glow); transition:background .4s}
+  .title{font-size:16px;font-weight:700}
+  .sub{font-size:11px;color:var(--dim);margin-top:2px}
+  .spacer{flex:1}
+  .btn{background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:8px;border-radius:10px}
+  .btn:hover{background:rgba(255,255,255,.06);color:var(--text)}
+  .room-sel{background:var(--panel); color:var(--text); border:1px solid #2b2c58; border-radius:10px; padding:7px 8px; font-size:12px; font-weight:600; font-family:inherit; outline:none; cursor:pointer; max-width:150px; flex:none; transition:border-color .2s}
+  .room-sel:focus{border-color:var(--accent)}
+  .room-sel option,.room-sel optgroup{color:var(--text); background:var(--panel)}
+  @media (max-width:640px){
+    header{gap:5px; padding:10px 8px}
+    .logo{width:34px;height:34px;font-size:15px}
+    .title{font-size:13px}
+    .brand{display:none}
+    .sub{display:none}
+    .btn{font-size:15px; padding:5px}
+    .room-sel{max-width:74px; font-size:11px; padding:6px 4px}
+    .mrow{padding:8px 10px}
+    footer{padding:0 8px calc(8px + env(safe-area-inset-bottom))}
+    .inrow{gap:6px}
+    .icon-btn{width:34px;height:34px;font-size:14px}
+    .send{width:40px;height:40px;font-size:16px}
+    .model-pill{font-size:10px; padding:6px 9px; gap:4px; max-width:108px}
+    .data-link{font-size:10px; padding:5px 8px; max-width:150px}
+    .tool-btn{width:30px;height:30px;font-size:13px}
+    .quota{font-size:10px}
+  }
+  .mrow{display:flex; align-items:center; gap:8px; padding:8px 16px 0; flex:none}
+  .mrow-l{font-size:12px; font-weight:700; color:var(--dim); flex:none}
+  .model-pill{position:relative; flex:1 1 auto; min-width:0; max-width:172px; display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid #2b2c58; border-radius:999px; padding:7px 12px; font-size:11.5px; font-weight:600; color:var(--text); cursor:pointer; transition:border-color .2s; white-space:nowrap}
+  .model-pill .mpl{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+  .model-pill:hover{border-color:var(--accent)}
+  .model-pill .dot{width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 8px rgba(34,197,94,.8); flex:none}
+  .model-pill .caret{font-size:9px; opacity:.7}
+  .composer-sel{position:absolute; inset:0; width:100%; opacity:0; cursor:pointer; border:none; background:none; font-size:14px}
+  .composer-sel option,.composer-sel optgroup{color:var(--text); background:var(--panel)}
+  .pre{white-space:pre; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--panel); border:1px solid #2b2c58; border-radius:10px; padding:10px; font-size:11px; line-height:1.75; overflow-x:auto}
+  .who-row{display:flex; gap:8px; padding:10px 16px 8px; flex:none}
+  .who-btn{flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 6px; border-radius:14px; border:1px solid #2b2c58; background:var(--panel); color:var(--dim); cursor:pointer; font-size:12.5px; font-weight:600; transition:.2s; font-family:inherit}
+  .who-btn.active{color:var(--text); border-color:var(--accent); background:#232450; box-shadow:0 0 0 1px var(--accent)}
+  .who-btn[data-who=teacher].active{border-color:var(--c-teacher); box-shadow:0 0 0 1px var(--c-teacher)}
+  main{flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth}
+  .msg{display:flex; max-width:88%; animation:pop .18s ease}
+  @keyframes pop{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+  .msg.user{align-self:flex-end; flex-direction:row-reverse}
+  .msg.silelo{align-self:flex-start}
+  .msg.teacher{align-self:flex-start}
+  .bubble{padding:9px 14px; border-radius:18px; font-size:14.5px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+  .msg.bot .bubble{border-bottom-left-radius:6px}
+  .msg.user .bubble{background:var(--grad); border-bottom-right-radius:6px}
+  .msg.silelo .bubble{background:var(--bg-silelo); border:1px solid #3b2e6e}
+  .msg.teacher .bubble{background:var(--bg-teacher); border:1px solid #1d4e6e}
+  .tag{display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700; margin-bottom:4px}
+  .tag.silelo{color:var(--c-silelo)}
+  .tag.teacher{color:var(--c-teacher)}
+  .tag.user{color:#fce7f3; justify-content:flex-end}
+  .bubble code{background:rgba(0,0,0,.35); padding:1px 6px; border-radius:6px; font-size:13px}
+  .bubble{position:relative}
+  .msg.bot .bubble{padding-right:40px}
+  .copy-btn{position:absolute; top:7px; right:8px; background:none; border:none; color:rgba(255,255,255,.45); font-size:13px; line-height:1; cursor:pointer; padding:4px 6px; border-radius:8px; opacity:.35; transition:opacity .15s, color .15s}
+  .msg:hover .copy-btn{opacity:1}
+  .copy-btn:hover{color:#fff; background:rgba(255,255,255,.08)}
+  .copy-btn.copied{color:#4ade80; opacity:1}
+  .bubble pre{background:#0a0b1c; border:1px solid #2b2c58; border-radius:12px; padding:10px; overflow-x:auto; margin:6px 0}
+  .bubble pre code{background:none; padding:0}
+  .bubble pre.diff{padding:0; border-color:#1f6feb44}
+  .bubble pre.diff code{display:block; padding:6px 0}
+  .d-line{display:block; padding:1px 10px; font-size:11px; line-height:1.7}
+  .d-add{background:rgba(46,160,67,.16); color:#7ee787; border-left:3px solid #238636}
+  .d-del{background:rgba(248,81,73,.14); color:#ff7b72; border-left:3px solid #da3633}
+  .d-hunk{background:rgba(88,166,255,.12); color:#58a6ff; border-left:3px solid #1f6feb}
+  .meta{font-size:10px; color:var(--dim); margin-top:3px; padding:0 6px}
+  .msg.user .meta{text-align:right}
+  .typing{display:none; align-self:flex-start; padding:12px 16px; background:var(--bubble); border-radius:18px; border-bottom-left-radius:6px}
+  .typing.show{display:flex; gap:5px}
+  .typing span{width:7px;height:7px;border-radius:50%;background:var(--dim);animation:blink 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+  footer{padding:0 12px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid #2b2c58; background:rgba(15,16,33,.95); display:flex; flex-direction:column; gap:6px}
+  .tool-row{display:flex; align-items:center; gap:6px; flex:none}
+  .tool-btn{display:flex; align-items:center; justify-content:center; width:32px; height:32px; background:var(--panel); color:var(--text); border:1px solid #2b2c58; border-radius:10px; font-size:14px; cursor:pointer; transition:all .2s}
+  .tool-btn:hover{border-color:var(--accent); transform:translateY(-1px)}
+  .tool-btn.active{background:var(--accent); color:#0b0b1e; border-color:var(--accent); box-shadow:0 0 14px rgba(130,90,255,.35)}
+  .tool-spacer{flex:1}
+  .tool-sep{width:1px; height:18px; background:#2b2c58; flex:none}
+  .data-link{position:relative; display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid #2b2c58; border-radius:10px; padding:6px 10px; font-size:11px; font-weight:600; color:var(--text); cursor:pointer; transition:all .2s; flex:none; max-width:220px}
+  .data-link:hover{border-color:var(--accent)}
+  .data-link.open{border-color:var(--accent); box-shadow:0 0 12px rgba(130,90,255,.3)}
+  .data-link .dl-txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .data-link .caret{font-size:9px; opacity:.7; flex:none}
+  .data-menu{display:none; position:absolute; bottom:calc(100% + 8px); left:0; min-width:230px; background:var(--panel); border:1px solid #3b3c78; border-radius:12px; padding:6px; z-index:40; box-shadow:0 12px 34px rgba(0,0,0,.5)}
+  .data-link.open .data-menu{display:block}
+  .dm-title{font-size:10px; color:var(--dim); padding:4px 8px 6px; font-weight:700}
+  .dm-item{display:block; width:100%; text-align:left; background:none; border:none; color:var(--text); font-size:12px; padding:8px 10px; border-radius:8px; cursor:pointer; font-family:inherit}
+  .dm-item:hover{background:rgba(130,90,255,.15)}
+  .dm-item.on{background:rgba(130,90,255,.22); color:var(--accent)}
+  .dm-off{opacity:.65}  .attach-row{display:flex; flex-wrap:wrap; gap:6px}
+  .chip{display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid #3b3c78; border-radius:10px; padding:4px 8px; font-size:11.5px; max-width:100%}
+  .chip img{width:42px; height:42px; object-fit:cover; border-radius:8px}
+  .chip .chip-x{cursor:pointer; opacity:.6; font-size:13px; padding:0 2px}
+  .chip .chip-x:hover{opacity:1}
+  .inrow{display:flex; gap:8px; align-items:flex-end}
+  .icon-btn{width:38px;height:38px;flex:none;border:none;border-radius:12px;background:var(--panel);color:var(--text);font-size:16px;cursor:pointer;border:1px solid #2b2c58;transition:.15s}
+  .icon-btn:hover{border-color:var(--accent); transform:translateY(-1px)}
+  .icon-btn.rec{background:#e11d48; border-color:#e11d48; animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(225,29,72,.5)}50%{box-shadow:0 0 0 8px rgba(225,29,72,0)}}
+  .quota{display:flex; align-items:center; gap:8px; font-size:10.5px; color:var(--muted); padding:0 4px}
+  .quota-t{flex:none}
+  .quota-bar{flex:1; height:5px; background:#2b2c58; border-radius:99px; overflow:hidden}
+  .quota-fill{display:block; height:100%; width:100%; border-radius:99px; background:var(--grad); transition:width .3s}
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:.2s}
+  .modal.show{opacity:1; pointer-events:auto}
+  .modal-box{width:min(420px, 92vw); background:var(--panel); border:1px solid #3b3c78; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .modal-h{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #2b2c58; font-size:14px}
+  .modal-b{padding:14px 16px; display:flex; flex-direction:column; gap:12px; font-size:12.5px}
+  .set-row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .set-row select,.set-row input{background:var(--bg); color:var(--text); border:1px solid #2b2c58; border-radius:10px; padding:7px 9px; font-size:12px; font-family:inherit; outline:none; max-width:55%}
+  .msg .imgbox{border-radius:14px; overflow:hidden; max-width:260px; border:1px solid #3b3c78}
+  .msg .imgbox img{display:block; width:100%; height:auto; cursor:pointer}
+  .msg .file-chip{display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); border:1px solid #3b3c78; border-radius:12px; padding:8px 12px; font-size:12.5px; text-decoration:none; color:var(--text)}
+  #inp{flex:1; min-height:40px; max-height:140px; background:var(--panel); color:var(--text); border:1px solid #2b2c58; border-radius:14px; padding:11px 13px; font-size:13.5px; font-family:inherit; resize:none; outline:none; line-height:1.5}
+  #inp:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--room-glow)}
+  #inp::placeholder{color:var(--muted)}
+  textarea{flex:1; resize:none; background:var(--panel); border:1px solid #2b2c58; border-radius:16px; color:var(--text); font-family:inherit; font-size:14.5px; padding:11px 14px; max-height:120px; outline:none}
+  textarea:focus{border-color:var(--accent)}
+  .send{position:relative; z-index:2; width:46px;height:46px;border:none;border-radius:50%;background:var(--grad);color:#fff;font-size:19px;cursor:pointer;flex:none; box-shadow:0 4px 14px var(--room-glow)}
+  .send:disabled{opacity:.4; cursor:default}
+  .toast{position:fixed; left:50%; bottom:84px; transform:translateX(-50%) translateY(20px); background:#2a2b5e; color:var(--text); padding:8px 14px; border-radius:12px; font-size:12.5px; opacity:0; pointer-events:none; transition:.25s; z-index:99; border:1px solid #3b3c78; max-width:90vw; text-align:center}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .diag{position:fixed; top:118px; right:12px; width:min(320px, calc(100vw - 24px)); background:#1c1d40; border:1px solid #3b3c78; border-radius:14px; padding:12px; z-index:98; display:none; box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .diag.show{display:block}
+  .diag-h{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:14px}
+  .diag-row{font-size:12.5px; padding:7px 0; border-bottom:1px dashed #2b2c58; line-height:1.5; color:var(--dim)}
+  .diag-row:last-child{border-bottom:none}
+  .ok{color:#4ade80; font-weight:600}.bad{color:#f87171; font-weight:600}
+  .welcome{align-self:center; text-align:center; color:var(--dim); font-size:12.5px; margin:16px 0; line-height:1.7}
+  .welcome b{color:var(--accent2)}
+  .welcome .c{color:var(--c-silelo)} .welcome .t{color:var(--c-teacher)}
+  .book{position:fixed; inset:0; background:rgba(8,9,20,.97); z-index:100; display:none; flex-direction:column; padding:16px; overflow-y:auto}
+  .book.show{display:flex}
+  .book-h{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
+  .book-h b{font-size:15px}
+  .book-item{background:var(--panel); border:1px solid #2b2c58; border-radius:14px; padding:14px; margin-bottom:10px; cursor:pointer}
+  .book-item h4{margin:0 0 4px; font-size:14.5px; color:var(--text)}
+  .book-item p{margin:0; color:var(--dim); font-size:12.5px; line-height:1.5}
+  .book-body{background:var(--panel); border:1px solid #2b2c58; border-radius:14px; padding:16px; animation:pop .2s ease}
+  .book-body .l{font-size:13.5px; line-height:1.75; margin-bottom:10px; color:var(--text)}
+  .book-body .tip{background:#232450; border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; font-size:12.5px; color:var(--text); line-height:1.6}
+  .book-back{background:none; border:1px solid #2b2c58; color:var(--text); border-radius:10px; padding:7px 14px; font-size:13px; cursor:pointer; margin-bottom:10px; align-self:flex-start; font-family:inherit}
+  /* ===== ธีม shadcn/ui (สลับด้วยปุ่ม 🎨) ===== */
+  body[data-theme="shadcn"]{
+    --bg:#fafafa; --panel:#ffffff; --bubble:#f4f4f5; --bubble2:#e4e4e7;
+    --accent:#18181b; --accent2:#3f3f46; --text:#18181b; --dim:#71717a;
+    --grad:linear-gradient(135deg,#18181b,#3f3f46);
+    --room-glow:rgba(24,24,27,.1);
+    --c-silelo:#18181b; --c-teacher:#18181b;
+    --bg-silelo:#f4f4f5; --bg-teacher:#f4f4f5;
+  }
+  body[data-theme="shadcn"] header{background:rgba(255,255,255,.92); border-bottom-color:#e4e4e7}
+  body[data-theme="shadcn"] footer{background:rgba(250,250,250,.95); border-top-color:#e4e4e7}
+  body[data-theme="shadcn"] .logo{box-shadow:none}
+  body[data-theme="shadcn"] .btn:hover{background:rgba(24,24,27,.06)}
+  body[data-theme="shadcn"] .room-sel, body[data-theme="shadcn"] .icon-btn, body[data-theme="shadcn"] .model-pill,
+  body[data-theme="shadcn"] .tool-btn, body[data-theme="shadcn"] .data-link, body[data-theme="shadcn"] #inp,
+  body[data-theme="shadcn"] .who-btn, body[data-theme="shadcn"] .pre, body[data-theme="shadcn"] .chip,
+  body[data-theme="shadcn"] .data-menu, body[data-theme="shadcn"] .diag{
+    border-color:#e4e4e7; background:var(--panel);
+  }
+  body[data-theme="shadcn"] .tool-sep{background:#e4e4e7}
+  body[data-theme="shadcn"] .bubble{border-radius:12px}
+  body[data-theme="shadcn"] .msg.bot .bubble{background:#f4f4f5; border:1px solid #e4e4e7; border-bottom-left-radius:4px; color:#18181b}
+  body[data-theme="shadcn"] .msg.user .bubble{background:#18181b; color:#fafafa; border-bottom-right-radius:4px}
+  body[data-theme="shadcn"] .msg.silelo .bubble, body[data-theme="shadcn"] .msg.teacher .bubble{border-color:#e4e4e7}
+  body[data-theme="shadcn"] .bubble pre{background:#fafafa; border-color:#e4e4e7; color:#18181b}
+  body[data-theme="shadcn"] .bubble code{background:#e4e4e7; color:#18181b}
+  body[data-theme="shadcn"] .send{border-radius:10px}
+  body[data-theme="shadcn"] #inp:focus{border-color:#18181b; box-shadow:0 0 0 3px rgba(24,24,27,.1)}
+  body[data-theme="shadcn"] .who-btn.active{background:#18181b; color:#fff; border-color:#18181b; box-shadow:none}
+  body[data-theme="shadcn"] .dm-item:hover{background:#f4f4f5}
+  body[data-theme="shadcn"] .toast{background:#18181b; color:#fafafa; border-color:#18181b}
+  body[data-theme="shadcn"] .diag-row{border-color:#e4e4e7}
+  body[data-theme="shadcn"] .mrow-l{color:#71717a}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" id="logoEmoji">🛋️</div>
+  <div>
+    <div class="title"><span class="brand">CF Bossnusilelo <span style="color:var(--accent2)">V.1</span> · </span><span id="roomTitle">ห้องนั่งเล่น</span></div>
+    <div class="sub">แชท 3 คน · พี่นุ + สลี่ + ครู CodingFleet 🧑‍🏫</div>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn" href="/admin.html" title="เบื้องหลัง (admin)" style="display:flex;align-items:center;justify-content:center;text-decoration:none">🖥️</a>
+  <a class="btn" href="/call.html" title="โทรหา AI ครู CodingFleet" style="display:flex;align-items:center;justify-content:center;text-decoration:none">📞</a>
+  <button class="btn" id="themeBtn" title="สลับธีม">🎨</button>
+  <select id="roomSel" class="room-sel" title="เปลี่ยนห้อง — ลิงก์จะเปลี่ยนตามห้อง"></select>
+  <button class="btn" id="shareBtn" title="คัดลอกลิงก์ห้องนี้">🔗</button>
+  <button class="btn" id="dlBtn" title="ดาวน์โหลดบทสนทนา">⬇️</button>
+  <button class="btn" id="settingsBtn" title="การตั้งค่า">⚙️</button>
+  <button class="btn" id="bookBtn" title="ตำราวิชา">📖</button>
+  <button class="btn" id="healthBtn" title="วินิจฉัยระบบ">🛠️</button>
+</header>
+
+<div class="who-row" id="whoRow">
+  <button class="who-btn" data-who="silelo">💜 สลี่</button>
+  <button class="who-btn" data-who="teacher">🧑‍🏫 ครู</button>
+  <button class="who-btn active" data-who="both">👥 ทั้งคู่</button>
+</div>
+
+<main id="msgs"></main>
+
+<footer>
+  <div class="tool-row" id="toolRow">
+    <div class="data-link" id="dataLink" title="เชื่อมต่อกับแหล่งข้อมูล"><span class="dl-ico">📎</span><span class="dl-txt" id="dlTxt">เชื่อมต่อกับเก็บข้อมูล</span><span class="caret">▾</span>
+      <div class="data-menu" id="dataMenu">
+        <div class="dm-title">แหล่งข้อมูลที่ครูจะอ้างอิง</div>
+        <button class="dm-item" data-src="files">📁 ไฟล์ในห้อง</button>
+        <button class="dm-item" data-src="lessons">📚 บทเรียนวิชาของห้อง</button>
+        <button class="dm-item" data-src="db">🗄️ ฐานข้อมูลตัวอย่าง</button>
+        <button class="dm-item dm-off" data-src="">✕ ไม่เชื่อมต่อ</button>
+      </div>
+    </div>
+    <span class="tool-sep"></span>
+    <button class="tool-btn" data-tool="search" title="🔎 ค้นหาเว็บ">🔎</button>
+    <button class="tool-btn" data-tool="run" title="💻 รันโค้ด">💻</button>
+    <button class="tool-btn" data-tool="db" title="🗄️ ฐานข้อมูล">🗄️</button>
+    <button class="tool-btn" data-tool="file" title="📖 อ่านโค้ด">📖</button>
+    <span class="tool-spacer"></span>
+    <button class="tool-btn" id="clearBtn" title="🗑️ ล้างแชทห้องนี้">🗑️</button>
+  </div>
+  <div class="attach-row" id="attachRow"></div>
+  <div class="inrow">
+    <button class="icon-btn" id="imgBtn" title="แนบรูปภาพ">🖼️</button>
+    <button class="icon-btn" id="fileBtn" title="แนบไฟล์">📎</button>
+    <button class="icon-btn" id="micBtn" title="พิมพ์ด้วยเสียง">🎤</button>
+    <textarea id="inp" rows="1" placeholder="Type your message..." enterkeyhint="send"></textarea>
+    <div class="model-pill" id="modelPillWrap">
+      <span class="dot"></span><span class="mpl" id="modelPillLabel">DeepSeek V4 Flash</span><span class="caret">▾</span>
+      <select id="modelSel" class="composer-sel" title="เลือกโมเดล AI">
+      <option value="">DeepSeek V4 Flash</option>
+      <optgroup label="ฟรี 100%">
+        <option value="z-ai/glm-5.2:free">GLM-5.2 — ฟรี</option>
+        <option value="openai/gpt-oss-20b:free">GPT-OSS 20B — ฟรี</option>
+        <option value="google/gemma-4-31b-it:free">Gemma 4 31B — ฟรี</option>
+        <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 120B — ฟรี</option>
+        <option value="openrouter/free">openrouter/free — ฟรี</option>
+      </optgroup>
+      <optgroup label="ถูก — ลองได้เลย">
+        <option value="deepseek/deepseek-v4-pro">DeepSeek V4 Pro</option>
+        <option value="inclusionai/ling-3.0-flash">Ling 3.0 Flash</option>
+        <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+        <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+      </optgroup>
+      <optgroup label="แพง — เติมเงินก่อน">
+        <option value="openai/gpt-5-mini">GPT-5 mini</option>
+        <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
+        <option value="openai/gpt-5">GPT-5</option>
+        <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
+        <option value="anthropic/claude-opus-4.1">Claude Opus 4.1</option>
+      </optgroup>
+    </select>
+    </div>
+    <button class="send" id="sendBtn" title="ส่ง">➤</button>
+  </div>
+  <div class="quota" id="quota"><span class="quota-t" id="quotaTxt"></span><span class="quota-bar"><span class="quota-fill" id="quotaFill"></span></span></div>
+  <input type="file" id="fileInp" hidden>
+  <input type="file" id="imgInp" accept="image/*" hidden>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="setModal">
+  <div class="modal-box">
+    <div class="modal-h"><b>⚙️ การตั้งค่า</b><button class="btn" id="setClose">✕</button></div>
+    <div class="modal-b">
+      <div class="set-row"><span>🗣️ สลี่ตอบเป็นภาษา</span>
+        <select id="setLang">
+          <option value="th">ไทย</option>
+          <option value="en">อังกฤษ</option>
+          <option value="mix">ไทย+อังกฤษ (ตามคำถาม)</option>
+        </select></div>
+      <div class="set-row"><span>📏 ความยาวคำตอบ</span>
+        <select id="setLen">
+          <option value="short">สั้น กระชับ</option>
+          <option value="normal">ปกติ</option>
+          <option value="long">ละเอียด สอนแบบยาว</option>
+        </select></div>
+      <div class="set-row"><span>🏷️ ชื่อเล่นของฉัน</span><input id="setName" placeholder="เช่น พี่นุ" maxlength="20"></div>
+      <div class="set-row"><span>🧹 ข้อมูล</span>
+        <button class="btn" id="setWipe">ล้างทุกห้อง + รีเซ็ต</button></div>
+      <div class="tip">💡 โควต้าฟรี: 10 ข้อความ/วัน (นับตามเครื่องนี้) — เปลี่ยนโมเดลเป็นตัวฟรีได้ในช่องโมเดล</div>
+    </div>
+  </div>
+</div>
+
+<div class="diag" id="diag">
+  <div class="diag-h"><b>🔧 วินิจฉัยระบบ</b><button class="btn" id="diagClose">✕</button></div>
+  <div id="diagBody"><div class="diag-row">กำลังตรวจ...</div></div>
+</div>
+
+<div class="book" id="book">
+  <div class="book-h"><b>📖 ตำราวิชา — ครู CodingFleet</b><button class="btn" id="bookClose">✕</button></div>
+  <div id="bookBody"></div>
+</div>
+
+<script>
+(function(){
+  // ===== ห้องของสลี่ =====
+  const ROOMS = {
+    living: {
+      name:'ห้องนั่งเล่น', emoji:'🛋️',
+      grad:'linear-gradient(135deg,#5b21b6,#9d174d)', glow:'rgba(124,58,237,.4)',
+      bg:'#0f1021', panel:'#171834', bubble:'#232450',
+      welcome:'สวัสดีค่าพี่นุ 💜 ห้องนั่งเล่น — คุยได้ทุกเรื่อง<br>มี <span class="c">สลี่</span> กับ <span class="t">ครู CodingFleet</span> อยู่ด้วยกันทั้งห้องเลยค่า'
+    },
+    study: {
+      name:'ห้องเรียน', emoji:'📚',
+      grad:'linear-gradient(135deg,#1d4ed8,#0d9488)', glow:'rgba(37,99,235,.4)',
+      bg:'#0c1626', panel:'#122038', bubble:'#1a2c4a',
+      welcome:'ยินดีต้อนรับเข้าห้องเรียนค่า 📚<br>สลี่พร้อมติว + ครู CodingFleet พร้อมสอน — ถามได้เลย!'
+    },
+    sleep: {
+      name:'ห้องนอน', emoji:'🛏️',
+      grad:'linear-gradient(135deg,#4c1d95,#1e1b4b)', glow:'rgba(109,40,217,.45)',
+      bg:'#131025', panel:'#1b1633', bubble:'#251d47',
+      welcome:'ค่ำแล้วนะคะพี่นุ 🌙 ห้องนอน — สลี่กับครูอยู่เป็นเพื่อน<br>เหนื่อยมาทั้งวันใช่ไหม พักได้เลยค่า'
+    }
+  };
+  const KEY_PREFIX = 'cfbn_v1_hist_';
+  // ห้องจาก URL (/chat/<ห้อง>) ชนะ — เหมือน CodingFleet: แชร์ลิงก์เปิดห้องนั้นเลย
+  const urlRoom = (location.pathname.match(/^\/chat\/([\w-]+)\/?$/) || [])[1];
+  let room = (urlRoom && ROOMS[urlRoom]) ? urlRoom : (localStorage.getItem('cfbn_v1_room') || 'living');
+  if (!ROOMS[room]) room = 'living';
+  let who = 'both';
+  let history = loadHist(room);
+  let sending = false;
+
+  const $ = id => document.getElementById(id);
+  const msgsEl = $('msgs'), inp = $('inp'), sendBtn = $('sendBtn');
+  const toastEl = $('toast'), roomSel = $('roomSel');
+
+  const NAMES = { user:'พี่นุ', silelo:'💜 สลี่', teacher:'🧑‍🏫 ครู CodingFleet' };
+
+  function loadHist(r){ try { return JSON.parse(localStorage.getItem(KEY_PREFIX + r) || '[]').slice(-200); } catch(e){ return []; } }
+  function saveHist(r, h){ try { localStorage.setItem(KEY_PREFIX + r, JSON.stringify(h.slice(-200))); } catch(e){ /* localStorage เต็ม/ปิด — ข้าม */ } }
+
+  function applyTheme(r){
+    const c = ROOMS[r];
+    const s = document.documentElement.style;
+    s.setProperty('--grad', c.grad);
+    s.setProperty('--room-glow', c.glow);
+    s.setProperty('--bg', c.bg);
+    s.setProperty('--panel', c.panel);
+    s.setProperty('--bubble', c.bubble);
+    $('logoEmoji').textContent = c.emoji;
+    $('roomTitle').textContent = c.name;
+  }
+
+  function renderStrip(){
+    roomSel.innerHTML = '';
+    Object.keys(ROOMS).forEach(r => {
+      const o = document.createElement('option');
+      o.value = r;
+      o.textContent = ROOMS[r].emoji + ' ' + ROOMS[r].name;
+      o.selected = r === room;
+      roomSel.appendChild(o);
+    });
+  }
+  roomSel.onchange = () => switchRoom(roomSel.value);
+
+  function renderWhoRow(){
+    document.querySelectorAll('.who-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.who === who);
+    });
+  }
+
+  function switchRoom(r){
+    if (r === room) return;
+    saveHist(room, history);
+    room = r;
+    localStorage.setItem('cfbn_v1_room', r);
+    history = loadHist(r);
+    applyTheme(r);
+    renderStrip();
+    window.history.pushState({}, '', '/chat/' + r); // ลิงก์เปลี่ยนตามห้อง → แชร์ได้เลย (ใช้ window.history — กันชนกับ history แชท)
+    msgsEl.innerHTML = '';
+    if (history.length) history.forEach(m => render(m.role, m.content, m.who, m.t));
+    else showWelcome();
+    toast('🚪 เข้าห้อง' + ROOMS[r].name + ' ' + ROOMS[r].emoji);
+  }
+
+  function showWelcome(){
+    const w = document.createElement('div');
+    w.className = 'welcome';
+    w.innerHTML = ROOMS[room].welcome;
+    msgsEl.appendChild(w);
+  }
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmt(t){ const d = new Date(t||Date.now()); return d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
+  function fallbackCopy(t){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function render(role, content, speaker, t){
+    const whoKey = speaker || (role === 'user' ? 'user' : 'silelo');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + (role === 'user' ? 'user' : 'bot ' + whoKey);
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    let tag = '';
+    if (NAMES[whoKey]) tag = '<div class="tag ' + whoKey + '">' + NAMES[whoKey] + '</div>';
+    if (content && typeof content === 'object'){
+      if (content.type === 'img'){
+        b.innerHTML = tag + '<div class="imgbox"><img src="' + content.src + '" alt="' + esc(content.name || '') + '" onclick="window.open(this.src)"></div><div class="meta" style="margin-top:4px">🖼️ ' + esc(content.name || 'รูปภาพ') + '</div>';
+      } else if (content.type === 'file'){
+        b.innerHTML = tag + '<div class="file-chip">📄 <b>' + esc(content.name) + '</b> <span style="opacity:.6">' + fmtSize(content.size) + '</span></div>';
+      } else {
+        b.innerHTML = tag + formatContent(String(content.text || content));
+      }
+    } else {
+      b.innerHTML = tag + formatContent(content);
+    }
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = fmt(t);
+    wrap.appendChild(b); wrap.appendChild(meta);
+    msgsEl.appendChild(wrap);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+    return wrap;
+  }
+
+  function fmtSize(n){
+    if (!n) return '';
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
+    return (n/1048576).toFixed(1) + ' MB';
+  }
+
+  function formatContent(c){
+    const s = String(c);
+    if (s.includes('```')){
+      const parts = s.split(/```/);
+      let html = '';
+      for (let i=0;i<parts.length;i+=2){
+        html += esc(parts[i]).replace(/\n/g,'<br>');
+        if (i+1 < parts.length){
+          const line = parts[i+1];
+          const nl = line.indexOf('\n');
+          const lang = nl === -1 ? line.trim() : line.slice(0, nl).trim();
+          const code = nl === -1 ? line : line.slice(nl+1);
+          if (lang === 'diff'){
+            html += '<pre class="diff"><code>' + esc(code).split('\n').map(l => {
+              if (l.startsWith('+')) return '<span class="d-line d-add">' + esc(l) + '</span>';
+              if (l.startsWith('-')) return '<span class="d-line d-del">' + esc(l) + '</span>';
+              if (l.startsWith('@@')) return '<span class="d-line d-hunk">' + esc(l) + '</span>';
+              return '<span class="d-line">' + esc(l) + '</span>';
+            }).join('') + '</code></pre>';
+          } else {
+            html += '<pre><code>' + esc(code) + '</code></pre>';
+          }
+        }
+      }
+      return html;
+    }
+    return esc(s).replace(/\n/g,'<br>');
+  }
+
+  let toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toastEl.classList.remove('show'), 2600);
+  }
+
+  function autoGrow(){ inp.style.height='auto'; inp.style.height = Math.min(inp.scrollHeight, 120) + 'px'; }
+  inp.addEventListener('input', autoGrow);
+
+  function addMsg(role, content, speaker){
+    const m = { role, content, who: speaker || (role === 'user' ? 'user' : 'silelo'), t: Date.now() };
+    history.push(m); saveHist(room, history);
+    return render(role, content, m.who, m.t);
+  }
+
+  // ===== 💬 โควต้าฟรี (แบบ CodingFleet: จำกัดข้อความ/วัน) =====
+  const DAILY = 10;
+  function todayKey(){ const d = new Date(); return 'cf_v1_q_' + d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+  function getQuota(){ return parseInt(localStorage.getItem(todayKey()) || '0', 10); }
+  function useQuota(){ const n = getQuota() + 1; localStorage.setItem(todayKey(), String(n)); renderQuota(); return n; }
+  function renderQuota(){
+    const used = getQuota(), left = Math.max(0, DAILY - used);
+    $('quotaTxt').textContent = '💬 โควต้าฟรีวันนี้: เหลือ ' + left + '/' + DAILY + ' ข้อความ';
+    $('quotaFill').style.width = Math.min(100, used / DAILY * 100) + '%';
+    if (used >= DAILY) $('quotaFill').style.background = '#e11d48';
+  }
+
+  // ===== ⚙️ การตั้งค่า =====
+  const SET_KEY = 'cf_v1_settings';
+  const settings = Object.assign({ lang: 'th', len: 'normal', name: '' }, JSON.parse(localStorage.getItem(SET_KEY) || '{}'));
+  function saveSettings(){ localStorage.setItem(SET_KEY, JSON.stringify(settings)); }
+  $('settingsBtn').onclick = () => { $('setLang').value = settings.lang; $('setLen').value = settings.len; $('setName').value = settings.name; $('setModal').classList.add('show'); };
+  $('setClose').onclick = () => $('setModal').classList.remove('show');
+  $('setModal').onclick = e => { if (e.target === $('setModal')) $('setModal').classList.remove('show'); };
+  $('setLang').onchange = e => { settings.lang = e.target.value; saveSettings(); toast('🗣️ สลี่จะตอบเป็นภาษา: ' + e.target.options[e.target.selectedIndex].text); };
+  $('setLen').onchange = e => { settings.len = e.target.value; saveSettings(); toast('📏 ความยาวคำตอบ: ' + e.target.options[e.target.selectedIndex].text); };
+  $('setName').onchange = e => { settings.name = e.target.value.trim(); saveSettings(); toast('🏷️ ชื่อเล่น: ' + (settings.name || '(ว่าง)')); };
+  $('setWipe').onclick = () => { if (confirm('ล้างประวัติทุกห้อง + รีเซ็ตการตั้งค่า? ทำแล้วกู้คืนไม่ได้!')){ localStorage.clear(); location.reload(); } };
+
+  // ===== 📎 แนบไฟล์ / 🖼️ รูปภาพ =====
+  let pending = null;
+  function addChip(){
+    $('attachRow').innerHTML = '';
+    if (!pending) return;
+    const c = document.createElement('div');
+    c.className = 'chip';
+    if (pending.type === 'img') c.innerHTML = '<img src="' + pending.src + '"> <span>' + esc(pending.name) + '</span> <span class="chip-x" title="เอาออก">✕</span>';
+    else c.innerHTML = '📄 <span>' + esc(pending.name) + ' (' + fmtSize(pending.size) + ')</span> <span class="chip-x" title="เอาออก">✕</span>';
+    c.querySelector('.chip-x').onclick = () => { pending = null; addChip(); };
+    $('attachRow').appendChild(c);
+  }
+  $('imgBtn').onclick = () => $('imgInp').click();
+  $('fileBtn').onclick = () => $('fileInp').click();
+  $('imgInp').onchange = e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (f.size > 4 * 1048576){ toast('🖼️ รูปใหญ่เกิน 4MB'); return; }
+    const rd = new FileReader();
+    rd.onload = () => { pending = { type: 'img', name: f.name, size: f.size, src: rd.result }; addChip(); };
+    rd.readAsDataURL(f);
+  };
+  $('fileInp').onchange = e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (f.size > 10 * 1048576){ toast('📎 ไฟล์ใหญ่เกิน 10MB'); return; }
+    pending = { type: 'file', name: f.name, size: f.size }; addChip();
+  };
+
+  // ===== 🎤 พิมพ์ด้วยเสียง =====
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recog = null, listening = false;
+  $('micBtn').onclick = () => {
+    if (!SR){ toast('😢 เบราว์เซอร์นี้ไม่รองรับไมค์ — ลอง Google Chrome'); return; }
+    if (listening){ try { recog.stop(); } catch(e){ /* ตัวจำเสียงหยุดอยู่แล้ว — ข้าม */ } return; }
+    recog = new SR();
+    recog.lang = 'th-TH'; recog.interimResults = true; recog.continuous = false;
+    recog.onresult = e => { let t = ''; for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript; inp.value = t; autoGrow(); };
+    recog.onend = () => { listening = false; $('micBtn').classList.remove('rec'); };
+    recog.onerror = ev => { toast('🎤 ไมค์: ' + (ev.error === 'not-allowed' ? 'ไม่ได้รับอนุญาต' : ev.error)); $('micBtn').classList.remove('rec'); listening = false; };
+    listening = true; $('micBtn').classList.add('rec');
+    try { recog.start(); } catch(e){ /* เบราว์เซอร์ปฏิเสธ — ข้าม */ }
+  };
+
+  // ===== ⬇️ ดาวน์โหลดบทสนทนา =====
+  $('dlBtn').onclick = () => {
+    if (!history.length){ toast('ยังไม่มีข้อความให้ดาวน์โหลด'); return; }
+    const lines = history.map(m => {
+      const who = NAMES[m.who] || (m.role === 'user' ? 'ฉัน' : 'สลี่');
+      const c = typeof m.content === 'object' ? (m.content.type === 'img' ? '[🖼️ รูปภาพ] ' + m.content.name : '[📎 ไฟล์] ' + m.content.name) : m.content;
+      return '### ' + who + ' (' + fmt(m.t) + ')\n' + c;
+    }).join('\n\n');
+    const blob = new Blob(['# 💬 บทสนทนา ' + ROOMS[room].name + ' — CF Bossnusilelo V.1\n\n' + lines], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'chat-' + room + '-' + Date.now() + '.md';
+    a.click(); URL.revokeObjectURL(a.href);
+    toast('⬇️ ดาวน์โหลดบทสนทนาแล้ว');
+  };
+
+  // ===== 🧰 เครื่องมือครู (เหมือน CodingFleet AI) =====
+  const TOOL_META = {
+    search: { name: '🔍 ค้นหาเว็บ', ph: '🧰 ครู: พิมพ์สิ่งที่อยากให้ค้นหา... เช่น ChatGPT คืออะไร' },
+    run:    { name: '💻 รันโค้ด',   ph: '🧰 ครู: พิมพ์โค้ดให้ครูรัน (Python) หรือ !รัน ```js ...' },
+    db:     { name: '🗄️ ฐานข้อมูล', ph: '🧰 ครู: พิมพ์ SQL จำลอง... CREATE TABLE / INSERT / SELECT' },
+    file:   { name: '📖 อ่านโค้ด',  ph: '🧰 ครู: พิมพ์ชื่อไฟล์... index | chat | server | readme | fix' }
+  };
+  const toolBtns = [...document.querySelectorAll('.tool-btn')];
+  let activeTool = null;
+  let dataSource = null;
+  function setTool(t){
+    if (!t){ activeTool = null; inp.placeholder = 'พิมพ์ข้อความ...'; }
+    else if (activeTool === t){ activeTool = null; inp.placeholder = 'พิมพ์ข้อความ...'; }
+    else { activeTool = t; inp.placeholder = TOOL_META[t].ph; }
+    toolBtns.forEach(b => b.classList.toggle('active', b.dataset.tool === activeTool));
+  }
+  const mSel = $('modelSel'), mLabel = $('modelPillLabel');
+  function syncModelLabel(){ mLabel.textContent = mSel.value ? mSel.selectedOptions[0].textContent.split(' — ')[0] : 'DeepSeek V4 Flash'; }
+  mSel.onchange = syncModelLabel;
+  syncModelLabel();
+
+  // ===== 📎 เชื่อมต่อกับแหล่งข้อมูล =====
+  const dlEl = $('dataLink'), dlTxt = $('dlTxt');
+  const DL_NAMES = { files: '📁 ไฟล์ในห้อง', lessons: '📚 บทเรียนวิชา', db: '🗄️ ฐานข้อมูลตัวอย่าง' };
+  const DL_CTX = {
+    files: 'ครูจะตอบโดยอ้างอิงจากไฟล์ที่นักเรียนแนบมาในห้องนี้ (ถ้ามี)',
+    lessons: 'ครูจะตอบโดยใช้เนื้อหาบทเรียนของห้อง ' + room + ' เป็นหลัก',
+    db: 'ครูจะใช้ข้อมูลตัวอย่างจากฐานข้อมูลของ sandbox เมื่อถามเรื่องฐานข้อมูล'
+  };
+  dlEl.onclick = e => { e.stopPropagation(); dlEl.classList.toggle('open'); };
+  document.addEventListener('click', () => dlEl.classList.remove('open'));
+  document.querySelectorAll('.dm-item').forEach(it => it.onclick = e => {
+    e.stopPropagation();
+    const src = it.dataset.src;
+    if (src){ dataSource = { label: DL_NAMES[src], ctx: DL_CTX[src] }; dlTxt.textContent = '✅ ' + DL_NAMES[src]; }
+    else { dataSource = null; dlTxt.textContent = 'เชื่อมต่อกับเก็บข้อมูล'; }
+    document.querySelectorAll('.dm-item').forEach(x => x.classList.toggle('on', x.dataset.src === src));
+    dlEl.classList.remove('open');
+    toast(src ? '📎 เชื่อมต่อแล้ว: ' + DL_NAMES[src] : 'ยกเลิกการเชื่อมต่อ');
+  });
+
+  async function wikiSearch(q){
+    try{
+      const r = await fetch('https://th.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent(q) + '&format=json&origin=*&srlimit=2');
+      const j = await r.json();
+      const hits = ((j.query && j.query.search) || []).slice(0, 2);
+      const out = [];
+      for (const h of hits){
+        const s = await fetch('https://th.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(h.title));
+        if (s.ok){ const d = await s.json(); out.push('• ' + h.title + ': ' + String(d.extract || '').slice(0, 500)); }
+      }
+      return out.join('\n') || 'ไม่พบในวิกิภาษาไทย';
+    }catch(e){ return 'ค้นวิกิไทยไม่สำเร็จ: ' + e.message; }
+  }
+  async function ddgSearch(q){
+    try{
+      const r = await fetch('https://api.duckduckgo.com/?q=' + encodeURIComponent(q) + '&format=json&no_html=1&skip_disambig=1');
+      const j = await r.json();
+      const parts = [];
+      if (j.AbstractText) parts.push(j.AbstractText.slice(0, 600));
+      ((j.RelatedTopics) || []).slice(0, 4).forEach(t => { if (t.Text) parts.push('• ' + t.Text.slice(0, 300)); });
+      return parts.join('\n') || 'ไม่พบผลจาก DuckDuckGo';
+    }catch(e){ return 'ค้น DuckDuckGo ไม่สำเร็จ: ' + e.message; }
+  }
+  async function runCode(code, lang){
+    try{
+      const r = await fetch('/api/tools', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: 'run', code, lang })
+      });
+      const j = await r.json();
+      if (j.ok) return j.output;
+      return 'รันไม่สำเร็จ: ' + (j.output || j.error || 'unknown');
+    }catch(e){
+      try{
+        const r = await fetch('https://emkc.org/api/v2/piston/execute', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: lang, version: '*', files: [{ name: 'main', content: code }] })
+        });
+        const j = await r.json();
+        if (j.run) return (j.run.output || '(ไม่มี output)') + (j.run.code !== 0 ? '\n[exit code ' + j.run.code + ']' : '');
+        return 'รันไม่สำเร็จ: ' + (j.message || 'unknown');
+      }catch(e2){ return 'รันโค้ดไม่ได้: ' + e2.message; }
+    }
+  }
+  function miniDb(sql){
+    const tables = JSON.parse(localStorage.getItem('cf_tables') || '{}');
+    const s = sql.trim().replace(/;$/, '');
+    const mCreate = s.match(/^CREATE TABLE (\w+)\s*\(([\s\S]+)\)$/i);
+    if (mCreate){
+      const cols = mCreate[2].split(',').map(c => c.trim().split(/\s+/)[0]);
+      tables[mCreate[1]] = { cols, rows: [] };
+      localStorage.setItem('cf_tables', JSON.stringify(tables));
+      return 'ตาราง ' + mCreate[1] + ' สร้างแล้ว (คอลัมน์: ' + cols.join(', ') + ')';
+    }
+    const mInsert = s.match(/^INSERT INTO (\w+)\s*\(([\s\S]+?)\)\s*VALUES\s*\(([\s\S]+)\)$/i);
+    if (mInsert){
+      const t = tables[mInsert[1]];
+      if (!t) return 'ไม่มีตาราง ' + mInsert[1] + ' — สร้างก่อนด้วย CREATE TABLE';
+      const cols = mInsert[2].split(',').map(c => c.trim().replace(/['"`]/g, ''));
+      const vals = mInsert[3].split(',').map(v => v.trim().replace(/^['"]|['"]$/g, ''));
+      const row = {}; t.cols.forEach(c => row[c] = null); cols.forEach((c, i) => row[c] = vals[i]);
+      t.rows.push(row); localStorage.setItem('cf_tables', JSON.stringify(tables));
+      return 'เพิ่ม 1 แถวใน ' + mInsert[1] + ' ✓ (ตอนนี้ ' + t.rows.length + ' แถว)';
+    }
+    const mSelect = s.match(/^SELECT (\*|\w+)\s+FROM (\w+)(?:\s+WHERE\s+(\w+)\s*=\s*['"]?([^'"]+)['"]?)?$/i);
+    if (mSelect){
+      const t = tables[mSelect[2]];
+      if (!t) return 'ไม่มีตาราง ' + mSelect[2] + ' — สร้างก่อนด้วย CREATE TABLE';
+      let rows = t.rows;
+      if (mSelect[3]) rows = rows.filter(r => String(r[mSelect[3]]) === mSelect[4]);
+      if (!rows.length) return 'ไม่พบข้อมูล';
+      return rows.map(r => JSON.stringify(r)).join('\n') + '\n(' + rows.length + ' แถว)';
+    }
+    const mDrop = s.match(/^DROP TABLE (\w+)$/i);
+    if (mDrop){ delete tables[mDrop[1]]; localStorage.setItem('cf_tables', JSON.stringify(tables)); return 'ลบตาราง ' + mDrop[1] + ' แล้ว'; }
+    if (/^SHOW TABLES$/i.test(s)){ const n = Object.keys(tables); return n.length ? n.join(', ') : 'ยังไม่มีตาราง — ลอง CREATE TABLE'; }
+    return 'SQL จำลองรองรับ: CREATE TABLE / INSERT INTO / SELECT / DROP TABLE / SHOW TABLES';
+  }
+  async function readFile(name){
+    try{
+      const r = await fetch('/api/file?name=' + encodeURIComponent(name));
+      const j = await r.json();
+      if (j.error) return j.error;
+      return j.content;
+    }catch(e){ return 'อ่านไฟล์ไม่ได้: ' + e.message; }
+  }
+  async function runTool(tool, arg){
+    if (tool === 'search') return '🔍 ผลค้นหา "' + arg + '"\n\n[วิกิพีเดียไทย]\n' + (await wikiSearch(arg)) + '\n\n[DuckDuckGo]\n' + (await ddgSearch(arg));
+    if (tool === 'run'){
+      let code = arg, lang = 'python';
+      // ดึงโค้ดบล็อก ```...``` ออกมา แม้จะมีคำพูดนำหน้า/ต่อท้าย (auto-detect)
+      const mc = arg.match(/```([\w+-]*)\s*\n?([\s\S]*?)```/);
+      if (mc){ lang = (mc[1] || 'python').toLowerCase(); code = mc[2]; }
+      if (lang === 'js') lang = 'javascript'; if (lang === 'py') lang = 'python';
+      return '💻 ผลรันโค้ด (' + lang + '):\n' + (await runCode(code, lang));
+    }
+    if (tool === 'db') return '🗄️ ผลฐานข้อมูล:\n' + miniDb(arg);
+    if (tool === 'file') return '📖 ไฟล์ ' + arg + ':\n' + (await readFile(arg));
+    return 'ไม่รู้จักเครื่องมือ';
+  }
+  function addToolBox(tool, arg, output){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg sys';
+    const b = document.createElement('div');
+    b.className = 'bubble tool';
+    b.innerHTML = '<div class="tag tool">🧰 ' + TOOL_META[tool].name + '</div><pre>' + esc(String(output).slice(0, 1500)) + '</pre>';
+    wrap.appendChild(b);
+    msgsEl.appendChild(wrap); msgsEl.scrollTop = msgsEl.scrollHeight;
+    return wrap;
+  }
+  async function handleTool(tool, arg){
+    addMsg('user', '🧰 [' + TOOL_META[tool].name + '] ' + arg);
+    const ty = document.createElement('div');
+    ty.className = 'typing show'; ty.innerHTML = '<span></span><span></span><span></span>';
+    msgsEl.appendChild(ty); msgsEl.scrollTop = msgsEl.scrollHeight;
+    const output = await runTool(tool, arg);
+    ty.remove();
+    addToolBox(tool, arg, output);
+    try{
+      const r = await fetch('/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: 'ใช้ผลเครื่องมือด้านบน ตอบ/สรุปให้พี่นุฟัง: ' + arg,
+          history: history.slice(-6, -1),
+          memory: '', unrestricted: false, room: room,
+          who: 'teacher', model: $('modelSel').value,
+          toolResult: { tool, arg, output }
+        }),
+        signal: AbortSignal.timeout(60000)
+      });
+      const j = await r.json();
+      useQuota(); // โควต้าฟรี 10/วัน — นับทุกครั้งที่เรียก AI
+      if (j.replies && j.replies.length) j.replies.forEach(rp => addMsg('assistant', rp.reply, rp.who));
+      else toast('⚠️ ' + (j.error || 'NO REPLY'));
+    }catch(e){ toast('⚠️ ' + (e.message || 'SERVER UNREACHABLE')); }
+  }
+
+  async function send(){
+    if (sending) return;
+    const q = inp.value.trim();
+    if (!q && !pending) return;
+    if (getQuota() >= DAILY){
+      toast('😢 หมดโควต้าฟรีวันนี้แล้ว (' + DAILY + '/' + DAILY + ') — พรุ่งนี้กลับมาใหม่นะ!');
+      return;
+    }
+    // แนบไฟล์/รูป → ส่งข้อความ + สิ่งแนบไปด้วยกัน
+    let attText = '';
+    if (pending){
+      attText = pending.type === 'img'
+        ? '\n[🖼️ พี่นุแนบรูปภาพ: ' + pending.name + ' — ดูจากชื่อไฟล์แล้วเดา/อธิบายให้หน่อย]'
+        : '\n[📎 พี่นุแนบไฟล์: ' + pending.name + ' (' + fmtSize(pending.size) + ')]';
+    }
+    // 🧰 ตรวจจับคำสั่งเครื่องมือ: !ค้น !รัน !db !อ่าน (หรือกดปุ่มเลือกเครื่องมือ)
+    const m1 = q.match(/^!(ค้น|search)\s+(.+)/i);
+    const m2 = q.match(/^!(รัน|run)\s*([\s\S]+)/i);
+    const m3 = q.match(/^!(db|sql|ฐานข้อมูล)\s+([\s\S]+)/i);
+    const m4 = q.match(/^!(อ่าน|file|โค้ด)\s+(\w+)/i);
+    let tool = null, arg = null;
+    if (m1){ tool = 'search'; arg = m1[2]; }
+    else if (m2){ tool = 'run'; arg = m2[2]; }
+    else if (m3){ tool = 'db'; arg = m3[2]; }
+    else if (m4){ tool = 'file'; arg = m4[1]; }
+    // 🎯 AUTO: พิมพ์ธรรมดา กดส่ง → ครูตรวจจับเอง (ไม่ต้องกดปุ่มเครื่องมือ!)
+    const codeBlock = q.match(/```([\w+-]*)\s*\n([\s\S]*?)```/);
+    if (!tool){
+      const t = q.toLowerCase();
+      const wantFix = /(แก้|fix|ปรับ|ช่วยแก้|แก้ให้|แก้บั๊ก|error|ผิด)/.test(t);
+      // 1) มีโค้ดบล็อก (และไม่ได้ขอให้แก้) → รันให้เลย
+      if (codeBlock && !wantFix){ tool = 'run'; arg = q; }
+      // 2) พูดว่ารัน/ลอง/ทดสอบ ("รันโค้ดนี้", "ลอง print(1)", "run ...") — ไม่ชน "รันไทม์"/"ทดสอบความเข้าใจ"
+      else if (/^(รันโค้ด|ลองโค้ด|รันเลย|รันให้|ลองให้|ทดสอบโค้ด)/.test(t) || /^(execute|run)\b/i.test(t) || /^(รัน|ลอง|ทดสอบ)\s/.test(t)){ tool = 'run'; arg = q.replace(/^(รันโค้ด|ลองโค้ด|รันเลย|รันให้|ลองให้|ทดสอบโค้ด|execute|run|รัน|ลอง|ทดสอบ)[\s:]*/i, '') || (codeBlock ? q : 'print("สวัสดี")'); }
+      // 3) ค้นหา/หาข้อมูล ("ค้นหาว่า...", "ค้น React", "search ...") — ไม่ชน "ค้นพบ"
+      else if (/^(ค้นหา|หาข้อมูล)/.test(t) || /^search\b/i.test(t) || /^(ค้น|หา)\s/.test(t)){ tool = 'search'; arg = q.replace(/^(ค้นหา|หาข้อมูล|search|ค้น|หา)[\s:]*/i, ''); }
+      // 4) อ่าน/แก้/สรุปไฟล์ของโปรเจกต์ → ครูเปิดให้แล้วจัดการต่อ
+      else {
+        const fm = q.match(/(อ่าน|แก้|ดู|เปิด|สรุป|ช่วยแก้|แก้ให้|อธิบาย)\s*(?:ไฟล์|โค้ด)?\s*(index|chat|server|readme|fix|package|public|api|main|app|style)/i);
+        if (fm){ tool = 'file'; arg = fm[2]; }
+      }
+    }
+    else if (activeTool){ tool = activeTool; arg = q; }
+    if (tool){
+      inp.value = ''; autoGrow(); setTool(null);
+      await handleTool(tool, arg.trim());
+      return;
+    }
+    if (pending){ addMsg('user', pending); pending = null; addChip(); }
+    if (q) addMsg('user', q);
+    inp.value = ''; autoGrow();
+    sendBtn.disabled = true; sending = true;
+    const ty = document.createElement('div');
+    ty.className = 'typing show';
+    ty.innerHTML = '<span></span><span></span><span></span>';
+    msgsEl.appendChild(ty); msgsEl.scrollTop = msgsEl.scrollHeight;
+    try{
+      const r = await fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          question: (q || 'ดูไฟล์/รูปภาพที่แนบมาให้หน่อย') + attText + (dataSource ? '\n\n[ข้อมูลที่เชื่อมต่อ: ' + dataSource.label + ']\n' + dataSource.ctx : ''),
+          history: history.slice(-8, -1),
+          memory: '',
+          unrestricted: false,
+          room: room,
+          who: who,
+          model: $('modelSel').value,
+          opt: { lang: settings.lang, len: settings.len, name: settings.name }
+        }),
+        signal: AbortSignal.timeout(60000)
+      });
+      const j = await r.json();
+      useQuota(); // ✅ นับ 1 ข้อความเมื่อส่งสำเร็จ (โควต้าฟรี 10/วัน)
+      if (j.replies && j.replies.length){
+        const models = []; let note = null;
+        j.replies.forEach(rp => { addMsg('assistant', rp.reply, rp.who); if (rp.model) models.push(rp.model + (rp.fallback ? ' (สำรอง)' : '')); if (rp.note) note = rp.note; });
+        toast(note ? '⚠️ ' + note : '⚡ ' + (j.provider||'').toUpperCase() + ' · ' + [...new Set(models)].join(' + '));
+      } else throw new Error(j.error || 'NO REPLY');
+    }catch(e){ toast('⚠️ ' + (e.message || 'SERVER UNREACHABLE')); }
+    ty.remove();
+    sendBtn.disabled = false; sending = false;
+  }
+
+  sendBtn.onclick = send;
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+  document.querySelectorAll('.who-btn').forEach(b => {
+    b.onclick = () => { who = b.dataset.who; renderWhoRow(); };
+  });
+  $('clearBtn').onclick = () => {
+    history = []; saveHist(room, []);
+    msgsEl.innerHTML = '';
+    showWelcome();
+    toast('🧹 ล้างประวัติห้องนี้แล้ว');
+  };
+
+  // ===== ปุ่มวินิจฉัย =====
+  const diag = $('diag'), diagBody = $('diagBody');
+  function row(label, ok, val){ return '<div class="diag-row">' + label + '<br><span class="' + (ok ? 'ok' : 'bad') + '">' + val + '</span></div>'; }
+  $('healthBtn').onclick = async () => {
+    diag.classList.add('show');
+    diagBody.innerHTML = '<div class="diag-row">กำลังตรวจระบบ...</div>';
+    try {
+      const r = await fetch('/api/health');
+      const j = await r.json();
+      let html = '';
+      html += row('1. KEY บนเซิร์ฟเวอร์', j.hasKey, j.hasKey ? 'มีแล้ว ✅' : 'ไม่มี ❌ → ตั้ง OPENROUTER_API_KEY ใน Vercel');
+      html += row('2. Key ใช้ได้ไหม', j.keyValid, j.keyValid ? 'ใช้ได้ ✅' : 'ใช้ไม่ได้ ❌');
+      html += row('3. โมเดล ' + j.model, j.modelExists, j.modelExists ? 'มีในบัญชี ✅' : 'ไม่มีในบัญชี ⚠️');
+      html += row('💰 เครดิต', (j.credits || 0) > 0, '$' + ((j.credits || 0).toFixed(2)) + ((j.credits || 0) > 0 ? ' — ใช้โมเดลแพงได้เลย!' : ' — โมเดลแพงต้องเติมเงินก่อน (openrouter.ai/settings/credits)'));
+      if (j.error) html += '<div class="diag-row bad">💡 ' + j.error + '</div>';
+      diagBody.innerHTML = html;
+    } catch (e) {
+      diagBody.innerHTML = '<div class="diag-row bad">เชื่อมต่อ /api/health ไม่ได้: ' + esc(e.message) + '</div>';
+    }
+  };
+  $('diagClose').onclick = () => diag.classList.remove('show');
+
+  // ===== 📖 ตำราวิชา =====
+  const LESSONS = [
+    { icon:'🌐', title:'บทที่ 1 — เว็บทำงานยังไง', desc:'เส้นทางข้อความจากนิ้วเฮียถึงสลี่', body:[
+      'เว็บเฮีย = 2 ชั้นที่ทำงานต่อกัน:',
+      '1) หน้าเว็บ (index.html) — สิ่งที่เห็น/กด อยู่บนมือถือหรือคอม',
+      '2) สมอง (api/chat.js) — อยู่บนเซิร์ฟเวอร์ (Vercel) คอยรับคำถามแล้วไปถาม AI',
+      'เส้นทางข้อความ: เฮียพิมพ์ → หน้าเว็บส่ง POST ไป /api/chat → api/chat.js ต่อ OpenRouter → สลี่/ครูคิด → ส่งคำตอบกลับ → หน้าเว็บวาดเป็นฟองข้อความ',
+      'พังตรงไหนก็ตามเส้นทางนี้: หน้าเว็บ? API? หรือ OpenRouter?',
+      '<div class="tip">💡 จำไว้: เว็บพัง = หนึ่งใน 2 ชั้นพัง หาให้เจอว่าชั้นไหน แล้วแก้ชั้นนั้น</div>'
+    ]},
+    { icon:'🔌', title:'บทที่ 2 — อ่าน api/chat.js (สมอง)', desc:'โค้ดของเฮียเอง อ่านทีละช่วง', body:[
+      'เปิดไฟล์ api/chat.js ดู — ทุกช่วงมี comment ภาษาไทยกำกับไว้แล้ว',
+      '• handler(req,res) = จุดรับทุกคำขอจากหน้าเว็บ',
+      '• body.question = ข้อความที่เฮียพิมพ์ (หน้าเว็บส่งมาให้)',
+      '• body.who = ใครจะตอบ: silelo / teacher / both',
+      '• SILELO_PERSONA กับ TEACHER_PERSONA = บุคลิกของแต่ละคน — แก้ได้เลย!',
+      '• callAI() = ไปถาม AI จริงที่ OpenRouter แล้วเอาคำตอบกลับมา',
+      '<div class="tip">✍️ ลองฝึก: เปลี่ยนข้อความใน TEACHER_PERSONA ว่าครูควรพูดยังไง → deploy → ถามครูดู เห็นผลทันที</div>'
+    ]},
+    { icon:'🖥️', title:'บทที่ 3 — อ่าน index.html (หน้าเว็บ)', desc:'หน้าตา + สมองฝั่งเฮีย', body:[
+      'ไฟล์นี้ = CSS (สี/หน้าตา) ด้านบน + JavaScript (สมองฝั่งหน้าเว็บ) ด้านล่าง',
+      '• ROOMS = ข้อมูลห้อง 3 ห้อง: ชื่อ/สี/ข้อความต้อนรับ',
+      '• localStorage = เก็บประวัติแชทไว้ในเครื่องเฮียเอง (ไม่ต้องมีฐานข้อมูล)',
+      '• fetch("/api/chat") = คำสั่งส่งข้อความไปหาสมอง',
+      '• render() = วาดฟองข้อความ พร้อม tag ชื่อคนพูด',
+      '<div class="tip">✍️ ลองฝึก: เปลี่ยนสีใน ROOMS.study.grad (เช่น #1d4ed8 → #0ea5e9) แล้วเข้าห้องเรียน — สีเปลี่ยนทันที</div>'
+    ]},
+    { icon:'🛠️', title:'บทที่ 4 — แก้บั๊ก 4 ขั้น', desc:'จดจำให้ขึ้นใจ ใช้ได้ทุกเว็บ', body:[
+      'ขั้น 1: กดปุ่ม 🛠️ ในแอป — มันเช็ค key/เงิน/โมเดลให้อัตโนมัติ',
+      'ขั้น 2: ถ้าแอปปกติแต่ยังพัง → เปิด F12 → Tab Console → อ่าน error สีแดง',
+      'ขั้น 3: ดู Vercel → Logs — เห็น error ฝั่งเซิร์ฟเวอร์',
+      'ขั้น 4: เปิด FIX-YOURSELF.md — ตารางอาการ→วิธีแก้ ครบ 7 ข้อ',
+      '<div class="tip">⚠️ กฎเหล็กของครู: ห้ามเดา — เอาข้อมูลจริง (error / ข้อความที่เห็น) มาวิเคราะห์เสมอ</div>'
+    ]},
+    { icon:'🧪', title:'บทที่ 5 — รู้จักโมเดล AI (ฟรี vs แพง)', desc:'โมเดลคืออะไร ตัวไหนฟรี ตัวไหนแพง', body:[
+      'AI ที่เฮียคุยด้วย = "โมเดล" บน OpenRouter (ร้านรวมโมเดล) แต่ละตัวเก่งต่างกัน ราคาต่างกัน',
+      'ราคาคิดต่อ 1 ล้าน token (1M tokens ≈ หนังสือ ~750 หน้า):',
+      '<div class="pre">DeepSeek V4 Pro    $0.66/M  ← หลักของเฮีย\nLing 3.0 Flash      $0.02/M  ← สำรอง\nDeepSeek R1        $0.70/M  (คิดลึก)\nGemini 2.5 Flash   $0.30/M\nGPT-5 mini         $0.25/M\nGemini 2.5 Pro     $1.25/M\nGPT-5              $1.25/M\nClaude Sonnet 4.5  $3/M\nClaude Opus 4.1    $15/M   ← แพงสุด</div>',
+      'โมเดลลงท้าย :free = ฟรี 100% ไม่หักเครดิต (GLM-5.2, GPT-OSS 20B ของ OpenAI, Gemma 4 ของ Google, Nemotron 120B ของ NVIDIA, openrouter/free)',
+      'ตอนนี้เครดิตเฮีย = $0.00 → กดตัวแพงจะขึ้น error แล้วระบบสลับให้ฟรีอัตโนมัติ พร้อมบอกสาเหตุให้รู้',
+      'อยากลองตัวแพง: เติมเงินที่ openrouter.ai/settings/credits แล้วเลือกโมเดลในกล่อง "🧠 โมเดล" ได้เลย',
+      '<div class="tip">💡 ครูแนะนำ: แพงไม่ใช่เก่งกว่าเสมอไป — ลองเทียบ GLM-5.2 (ฟรี) กับ GPT-5 ได้จากกล่องเลือกโมเดล</div>'
+    ]},
+    { icon:'📝', title:'การบ้านบทที่ 1', desc:'ทำเสร็จส่งครูตรวจ', body:[
+      '1) เปลี่ยนข้อความต้อนรับห้องนั่งเล่น (welcome ใน ROOMS.living) เป็นคำพูดเฮียเอง',
+      '2) เปลี่ยนสีไล่ระดับปุ่มส่ง (--grad) ให้เป็นสีที่เฮียชอบ',
+      '3) ตั้ง env PERSONA: ให้สลี่พูดติดท้ายว่า "ค่า~" ทุกประโยค',
+      '<div class="tip">🎓 ทำเสร็จ deploy แล้วส่งลิงก์มาให้ครูตรวจ — ครูให้คะแนนให้กำลังใจ 55</div>'
+    ]}
+  ];
+  const book = $('book'), bookBody = $('bookBody');
+  function bookList(){
+    bookBody.innerHTML = LESSONS.map((l,i) =>
+      '<div class="book-item" data-i="' + i + '"><h4>' + l.icon + ' ' + l.title + '</h4><p>' + l.desc + '</p></div>'
+    ).join('');
+    bookBody.querySelectorAll('.book-item').forEach(el => {
+      el.onclick = () => showLesson(+el.dataset.i);
+    });
+  }
+  function showLesson(i){
+    const l = LESSONS[i];
+    bookBody.innerHTML = '<button class="book-back" id="bookBack">← กลับสารบัญ</button>' +
+      '<div class="book-body"><h3 style="margin:0 0 12px">' + l.icon + ' ' + l.title + '</h3>' +
+      l.body.map(p => '<div class="l">' + p + '</div>').join('') + '</div>';
+    $('bookBack').onclick = bookList;
+  }
+  $('bookBtn').onclick = () => { bookList(); book.classList.add('show'); };
+  $('bookClose').onclick = () => book.classList.remove('show');
+
+  // ===== 🔗 แชร์ลิงก์ห้อง (แบบ CodingFleet — แชร์ URL ได้เลย) =====
+  $('shareBtn').onclick = () => {
+    const u = location.origin + '/chat/' + room;
+    const done = () => toast('🔗 คัดลอกลิงก์แล้ว: ' + u);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(u).then(done).catch(() => { fallbackCopy(u); done(); });
+    } else {
+      fallbackCopy(u);
+      done();
+    }
+  };
+  // กด back/forward ของเบราว์เซอร์ → เปลี่ยนห้องตาม URL
+  window.addEventListener('popstate', () => {
+    const m2 = (location.pathname.match(/^\/chat\/([\w-]+)\/?$/) || [])[1];
+    if (m2 && ROOMS[m2] && m2 !== room) switchRoom(m2);
+  });
+
+  // ===== เริ่มต้น =====
+  applyTheme(room);
+  renderQuota();
+  renderStrip();
+  renderWhoRow();
+  if (history.length) history.forEach(m => render(m.role, m.content, m.who, m.t));
+  else showWelcome();
+})();
+  // ===== สลับธีม (CodingFleet มืด ↔ shadcn/ui สว่าง) =====
+  (function () {
+    const btn = document.getElementById('themeBtn');
+    const saved = localStorage.getItem('cf-theme') || 'dark';
+    document.body.dataset.theme = saved;
+    btn.textContent = saved === 'shadcn' ? '🌙' : '🎨';
+    btn.title = saved === 'shadcn' ? 'กลับธีม CodingFleet (มืด)' : 'สลับธีม shadcn/ui (สว่าง)';
+    btn.addEventListener('click', function () {
+      const next = document.body.dataset.theme === 'shadcn' ? 'dark' : 'shadcn';
+      document.body.dataset.theme = next;
+      localStorage.setItem('cf-theme', next);
+      btn.textContent = next === 'shadcn' ? '🌙' : '🎨';
+      btn.title = next === 'shadcn' ? 'กลับธีม CodingFleet (มืด)' : 'สลับธีม shadcn/ui (สว่าง)';
+    });
+  })();
+</script>
+</body>
+</html>

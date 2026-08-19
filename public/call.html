@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CodingFleet AI Call 📞</title>
+<style>
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #2b1f5e 0%, #141233 45%, #0b0a1e 100%);
+    color:#f1eefe; font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .topbar{display:flex; align-items:center; gap:10px; padding:12px 14px; background:rgba(20,18,51,.72); border-bottom:1px solid #2b2c58; backdrop-filter:blur(10px); flex:none}
+  .back{width:34px;height:34px;border-radius:10px;background:#232450;border:1px solid #2b2c58;color:#f1eefe;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;text-decoration:none;flex:none}
+  .back:hover{border-color:#a78bfa}
+  .tb-t{flex:1; min-width:0}
+  .tb-title{font-size:15px;font-weight:800}
+  .tb-title .new{background:#e9d5ff;color:#4c1d95;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:2px;letter-spacing:.5px}
+  .tb-sub{font-size:10.5px;color:#9a96c9;margin-top:1px}
+  .tb-status{font-size:10.5px;font-weight:700;color:#22c55e;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);padding:4px 10px;border-radius:999px;flex:none}
+  .tb-status .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:5px;animation:blink 1.6s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  main{flex:1; display:flex; flex-direction:column; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#2b2c58 transparent}
+  .stage{display:flex; flex-direction:column; align-items:center; padding:26px 16px 10px; position:relative}
+  .rings{position:relative; width:170px; height:170px; margin-bottom:14px}
+  .avatar{
+    position:absolute; inset:0; margin:auto; width:150px; height:150px; border-radius:50%;
+    background:linear-gradient(135deg,#5b21b6,#9d174d); display:flex; align-items:center; justify-content:center;
+    font-size:64px; box-shadow:0 0 60px rgba(167,139,250,.45), inset 0 0 0 5px rgba(255,255,255,.08);
+    animation:float 3.4s ease-in-out infinite; z-index:2;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .ring{position:absolute; inset:0; border-radius:50%; border:2px solid rgba(167,139,250,.5); animation:ring 2.4s ease-out infinite}
+  .ring.r2{animation-delay:1.2s}
+  @keyframes ring{0%{transform:scale(.9); opacity:.9}100%{transform:scale(1.28); opacity:0}}
+  .caller-name{font-size:21px;font-weight:800;letter-spacing:.3px}
+  .caller-sub{font-size:11.5px;color:#9a96c9;margin-top:3px}
+  .status{margin-top:14px; font-size:13px; font-weight:700; color:#c4b5fd; min-height:20px; text-align:center}
+  .status.listening{color:#7dd3fc}
+  .status.thinking{color:#fbbf24}
+  .status.speaking{color:#86efac}
+  .wave{display:flex; gap:4px; align-items:center; height:26px; margin-top:12px; opacity:.25}
+  .wave i{width:4px; border-radius:2px; background:#a78bfa; height:6px; transition:height .15s}
+  .wave.on{opacity:1}
+  .wave.on i{animation:wv 0.9s ease-in-out infinite}
+  .wave.on i:nth-child(2n){animation-delay:.15s}
+  .wave.on i:nth-child(3n){animation-delay:.3s}
+  .wave.on i:nth-child(4n){animation-delay:.45s}
+  .wave.on i:nth-child(5n){animation-delay:.6s}
+  @keyframes wv{0%,100%{height:6px}50%{height:24px}}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:560px; margin:16px auto 0; padding:0 14px}
+  .chips span{font-size:10.5px; font-weight:600; color:#c9c5f0; background:rgba(35,36,80,.7); border:1px solid #2b2c58; border-radius:999px; padding:5px 11px; transition:.2s}
+  .chips span:hover{border-color:#a78bfa; color:#fff; transform:translateY(-1px)}
+  .chips.hide{display:none}
+
+  .transcript{flex:1; width:100%; max-width:640px; margin:0 auto; padding:6px 16px 12px; display:flex; flex-direction:column; gap:8px; overflow-y:auto}
+  .t-msg{max-width:82%; padding:9px 13px; border-radius:16px; font-size:13.5px; line-height:1.55; word-break:break-word; animation:pop .22s ease}
+  @keyframes pop{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+  .t-me{align-self:flex-end; background:linear-gradient(135deg,#5b21b6,#9d174d); border-bottom-right-radius:5px}
+  .t-ai{align-self:flex-start; background:#232450; border:1px solid #2b2c58; border-bottom-left-radius:5px}
+  .t-ai .t-who{font-size:9.5px; color:#a78bfa; font-weight:800; margin-bottom:3px; display:flex; align-items:center; gap:5px}
+  .t-ai .t-who .spk{font-size:9px; background:rgba(167,139,250,.18); padding:1px 6px; border-radius:99px; color:#c4b5fd}
+  .t-empty{text-align:center; color:#9a96c9; font-size:12px; padding:20px 10px; line-height:1.7}
+
+  .type-panel{display:none; gap:8px; padding:10px 14px; background:rgba(20,18,51,.85); border-top:1px solid #2b2c58; flex:none}
+  .type-panel.open{display:flex}
+  .type-panel textarea{flex:1; min-height:44px; max-height:120px; background:#171834; border:1px solid #2b2c58; border-radius:14px; color:#f1eefe; font-family:inherit; font-size:13.5px; padding:11px 13px; outline:none; resize:none; line-height:1.5}
+  .type-panel textarea:focus{border-color:#a78bfa}
+  .type-panel button{width:52px; border:none; border-radius:14px; background:linear-gradient(135deg,#5b21b6,#9d174d); color:#fff; font-size:15px; font-weight:800; cursor:pointer; flex:none}
+
+  footer{flex:none; padding:12px 16px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid #2b2c58; background:rgba(15,16,33,.85); backdrop-filter:blur(10px)}
+  .ctrl{display:flex; align-items:center; justify-content:center; gap:16px; max-width:520px; margin:0 auto}
+  .cbtn{display:flex; flex-direction:column; align-items:center; gap:4px; background:#232450; border:1px solid #2b2c58; color:#f1eefe; width:62px; padding:9px 0; border-radius:16px; cursor:pointer; font-family:inherit; transition:.15s}
+  .cbtn span{font-size:9.5px; font-weight:700; color:#9a96c9}
+  .cbtn:hover{border-color:#a78bfa; transform:translateY(-2px)}
+  .cbtn.active{background:#5b21b6; border-color:#a78bfa; box-shadow:0 0 18px rgba(167,139,250,.4)}
+  .cbtn.active span{color:#fff}
+  .cbtn.on{background:#e11d48; border-color:#e11d48}
+  .cbtn.on span{color:#fff}
+  .cbtn:disabled{opacity:.4; pointer-events:none}
+  .hang{width:70px; height:70px; border-radius:50%; border:none; background:#e11d48; color:#fff; font-size:26px; cursor:pointer; box-shadow:0 6px 24px rgba(225,29,72,.45); transition:.15s; font-family:inherit; display:flex; align-items:center; justify-content:center}
+  .hang:hover{transform:scale(1.07)}
+  .hang.redo{background:linear-gradient(135deg,#5b21b6,#9d174d); box-shadow:0 6px 24px rgba(167,139,250,.45); font-size:15px; font-weight:800; width:88px; border-radius:999px}
+  .hang.redo .sm{display:block; font-size:20px; margin-bottom:2px}
+  @media (max-width:480px){
+    .cbtn{width:56px}
+    .hang{width:62px; height:62px; font-size:23px}
+    .chips span{font-size:9.5px; padding:4px 9px}
+    .avatar{width:120px; height:120px; font-size:52px}
+    .rings{width:138px; height:138px}
+    .caller-name{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="/chat/living" title="กลับหน้าแชท">←</a>
+  <div class="tb-t">
+    <div class="tb-title">AI Call <span class="new">NEW</span></div>
+    <div class="tb-sub">CodingFleet · Neo-Connect · ตอบสดทันที</div>
+  </div>
+  <div class="tb-status"><span class="dot"></span><span id="onlineTxt">ออนไลน์</span></div>
+</div>
+
+<main>
+  <div class="stage">
+    <div class="rings">
+      <div class="ring r1"></div><div class="ring r2"></div>
+      <div class="avatar" id="avatar">🧑‍🏫</div>
+    </div>
+    <div class="caller-name">CodingFleet AI</div>
+    <div class="caller-sub">ครูผู้ช่วยพี่นุ · ตอบได้ทุกเรื่อง 24 ชม.</div>
+    <div class="status" id="status">📞 กำลังโทรหา...</div>
+    <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="chips" id="chips">
+      <span>💻 เขียนโค้ดทุกภาษา</span>
+      <span>🌐 สร้างเว็บ &amp; แอป iOS สไตล์</span>
+      <span>🧩 DOM · if-else · Loop · Function</span>
+      <span>🐞 แก้บั๊ก &amp; ดีบัก</span>
+      <span>🔌 เชื่อมต่อ API</span>
+      <span>🧠 Gemini · DeepSeek · Qwen</span>
+      <span>⚙️ Ollama · GGUF (รันในเครื่อง)</span>
+      <span>💜 Neo-Connect / SILELO</span>
+    </div>
+  </div>
+  <div class="transcript" id="transcript">
+    <div class="t-empty" id="tEmpty">— สายว่าง คุยกับครูได้เลย พิมพ์ หรือ กดปุ่ม 🎤 พูดก็ได้ —</div>
+  </div>
+</main>
+
+<div class="type-panel" id="typePanel">
+  <textarea id="typeInp" placeholder="พิมพ์ข้อความ แล้วกดส่ง... ครู CodingFleet ฟังอยู่!" rows="1"></textarea>
+  <button id="typeSend">ส่ง</button>
+</div>
+
+<footer>
+  <div class="ctrl">
+    <button class="cbtn" id="micBtn" title="กดเพื่อพูดกับ AI"><span style="font-size:20px">🎤</span><span>พูด</span></button>
+    <button class="cbtn" id="keyBtn" title="เปิดแป้นพิมพ์"><span style="font-size:20px">⌨️</span><span>พิมพ์</span></button>
+    <button class="hang" id="hangBtn" title="วางสาย">📞</button>
+    <button class="cbtn" id="spkBtn" title="เปิด/ปิดเสียงตอบ"><span style="font-size:20px">🔊</span><span>เสียง</span></button>
+    <button class="cbtn" id="clsBtn" title="ล้างบทสนทนา"><span style="font-size:20px">🗑️</span><span>ล้าง</span></button>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const statusEl = $('#status'), wave = $('#wave'), tbox = $('#transcript');
+  const micBtn = $('#micBtn'), keyBtn = $('#keyBtn'), hangBtn = $('#hangBtn');
+  const spkBtn = $('#spkBtn'), clsBtn = $('#clsBtn'), typePanel = $('#typePanel');
+  const typeInp = $('#typeInp'), typeSend = $('#typeSend'), chips = $('#chips');
+
+  let state = 'calling';       // calling | idle | listening | thinking | speaking | ended
+  let voiceOn = true, micOn = false;
+  let history = [];
+  let startedAt = Date.now(), msgCount = 0;
+  let recognition = null, uttering = false;
+
+  // ===== เสียงพูด (TTS) =====
+  let thVoice = null;
+  function pickVoice(){
+    try{
+      const vs = speechSynthesis.getVoices();
+      thVoice = vs.find(v => /th[-_]/i.test(v.lang)) || null;
+    }catch(e){}
+  }
+  pickVoice();
+  if (speechSynthesis) { speechSynthesis.onvoiceschanged = pickVoice; }
+
+  function speak(text){
+    if (!voiceOn || !('speechSynthesis' in window)) return;
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text.replace(/[*`#]/g,''));
+      u.lang = thVoice ? 'th-TH' : 'th-TH';
+      if (thVoice) u.voice = thVoice;
+      u.rate = 1.04; u.pitch = 1.05;
+      uttering = true;
+      setStatus('speaking', '🔊 ครูกำลังพูด...');
+      wave.classList.add('on');
+      u.onend = () => { uttering = false; wave.classList.remove('on'); setStatus('idle', '🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย'); };
+      u.onerror = () => { uttering = false; wave.classList.remove('on'); setStatus('idle', '🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย'); };
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopSpeak(){
+    try{ if (uttering) { speechSynthesis.cancel(); uttering = false; wave.classList.remove('on'); } }catch(e){}
+  }
+
+  function setStatus(st, txt){
+    statusEl.className = 'status ' + st;
+    statusEl.textContent = txt;
+    if (st === 'idle'){ wave.classList.remove('on'); }
+  }
+
+  function addMsg(role, text){
+    $('#tEmpty') && $('#tEmpty').remove();
+    const d = document.createElement('div');
+    d.className = 't-msg ' + (role === 'me' ? 't-me' : 't-ai');
+    if (role === 'ai'){
+      d.innerHTML = '<div class="t-who">🧑‍🏫 ครู CodingFleet' + (voiceOn ? ' <span class="spk">🔊 พูดให้ฟัง</span>' : ' <span class="spk">🔇 เงียบ</span>') + '</div>' + escapeHtml(text);
+    } else {
+      d.textContent = text;
+    }
+    tbox.appendChild(d);
+    tbox.scrollTop = tbox.scrollHeight;
+  }
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
+
+  // ===== เรียก AI =====
+  async function askAI(question){
+    stopSpeak();
+    setStatus('thinking', '🧠 ครูกำลังคิด...');
+    wave.classList.add('on');
+    addMsg('me', question);
+    history.push({role:'user', who:'พี่นุ', content:question});
+    try{
+      const res = await fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          question,
+          who: 'teacher',
+          room: 'living',
+          history,
+          opt: { lang:'th', len:'short', name:'พี่นุ' }
+        })
+      });
+      const data = await res.json();
+      let reply = '';
+      if (data.replies && data.replies[0]) reply = data.replies[0].reply;
+      else if (data.error) reply = 'ขอโทษครับ ครูติดปัญหาชั่วคราว: ' + data.error;
+      if (!reply.trim()) reply = 'ขอโทษครับ ครูตอบไม่ได้ตอนนี้ ลองถามใหม่ได้นะครับ';
+      history.push({role:'assistant', who:'teacher', content:reply});
+      msgCount++;
+      addMsg('ai', reply);
+      speak(reply);
+      setStatus('idle', '🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย');
+    }catch(err){
+      setStatus('idle', '⚠️ สัญญาณขัดข้อง ลองใหม่นะครับ');
+      addMsg('ai', 'ขอโทษครับ สายขาด ลองถามใหม่ได้นะครับ 🙏');
+    }
+  }
+
+  // ===== ไมค์ (Speech Recognition ไทย) =====
+  function startMic(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR){ addMsg('ai','ขอโทษครับ เบราว์เซอร์นี้ยังใช้เสียงไม่ได้ — กดปุ่ม ⌨️ พิมพ์แทนได้นะครับ'); return; }
+    if (state === 'thinking') return;
+    try{
+      recognition = new SR();
+      recognition.lang = 'th-TH';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onstart = () => { micOn = true; micBtn.classList.add('on'); setStatus('listening','🎤 ฟังพี่นุอยู่... พูดได้เลย'); };
+      recognition.onresult = e => {
+        const txt = e.results[0][0].transcript;
+        recognition.stop();
+        askAI(txt);
+      };
+      recognition.onerror = e => {
+        micOn = false; micBtn.classList.remove('on');
+        setStatus('idle','🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย');
+      };
+      recognition.onend = () => {
+        micOn = false; micBtn.classList.remove('on');
+        if (state === 'listening') setStatus('idle','🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย');
+      };
+      recognition.start();
+    }catch(e){
+      micOn = false; micBtn.classList.remove('on');
+      setStatus('idle','🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย');
+    }
+  }
+
+  // ===== ปุ่มควบคุม =====
+  micBtn.addEventListener('click', () => {
+    if (state === 'ended' || state === 'thinking') return;
+    if (micOn) { try{recognition && recognition.stop();}catch(e){} micOn = false; micBtn.classList.remove('on'); setStatus('idle','🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย'); return; }
+    startMic();
+  });
+
+  keyBtn.addEventListener('click', () => {
+    typePanel.classList.toggle('open');
+    if (typePanel.classList.contains('open')) { typeInp.focus(); }
+    keyBtn.classList.toggle('active', typePanel.classList.contains('open'));
+  });
+
+  function sendTyped(){
+    const q = typeInp.value.trim();
+    if (!q || state === 'thinking' || state === 'ended') return;
+    typeInp.value = '';
+    typePanel.classList.remove('open');
+    keyBtn.classList.remove('active');
+    askAI(q);
+  }
+  typeSend.addEventListener('click', sendTyped);
+  typeInp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendTyped(); } });
+
+  spkBtn.addEventListener('click', () => {
+    voiceOn = !voiceOn;
+    spkBtn.classList.toggle('on', !voiceOn);
+    if (!voiceOn) stopSpeak();
+  });
+
+  clsBtn.addEventListener('click', () => {
+    history = []; msgCount = 0;
+    tbox.innerHTML = '<div class="t-empty">— สายว่าง คุยกับครูได้เลย พิมพ์ หรือ กดปุ่ม 🎤 พูดก็ได้ —</div>';
+  });
+
+  hangBtn.addEventListener('click', endCall);
+
+  function endCall(){
+    if (state === 'ended'){ startCall(); return; }
+    stopSpeak();
+    try{ recognition && recognition.stop(); }catch(e){}
+    micOn = false; micBtn.classList.remove('on');
+    state = 'ended';
+    setStatus('ended','📴 สายหลุดแล้ว');
+    const secs = Math.round((Date.now() - startedAt) / 1000);
+    const mm = String(Math.floor(secs/60)).padStart(2,'0'), ss = String(secs%60).padStart(2,'0');
+    const d = document.createElement('div');
+    d.className = 't-msg t-ai';
+    d.innerHTML = '<div class="t-who">📞 สรุปสาย</div>เวลาสาย <b>' + mm + ':' + ss + '</b> · คุยไป <b>' + msgCount + '</b> ข้อความ<br>ขอบคุณที่โทรหาครู CodingFleet นะครับ 💜';
+    tbox.appendChild(d); tbox.scrollTop = tbox.scrollHeight;
+    micBtn.disabled = true; keyBtn.disabled = true;
+    hangBtn.classList.add('redo');
+    hangBtn.innerHTML = '<span class="sm">📞</span>โทรอีกครั้ง';
+    $('#onlineTxt').textContent = 'ว่าง';
+  }
+
+  // ===== เริ่มสาย =====
+  function startCall(){
+    state = 'calling'; msgCount = 0; startedAt = Date.now();
+    hangBtn.classList.remove('redo');
+    hangBtn.innerHTML = '📞';
+    hangBtn.disabled = false;
+    micBtn.disabled = false; keyBtn.disabled = false;
+    $('#onlineTxt').textContent = 'ออนไลน์';
+    setStatus('calling', '📞 กำลังโทรหา...');
+    chips.classList.remove('hide');
+    setTimeout(() => {
+      if (state === 'ended') return;
+      state = 'idle';
+      chips.classList.add('hide');
+      setStatus('thinking', '🧠 ครูกำลังคิด...');
+      // AI ทักทายเองตอนรับสาย
+      fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          question: 'สวัสดีครับพี่นุ! (ทักทายสั้นๆ 1-2 ประโยค บอกว่าพร้อมช่วยเหลือเรื่องโค้ด/เว็บ/AI แล้วถามว่าจะให้ช่วยอะไร)',
+          who: 'teacher', room: 'living', history: [],
+          opt: { lang:'th', len:'short', name:'พี่นุ' }
+        })
+      }).then(r => r.json()).then(data => {
+        if (state === 'ended') return;
+        const reply = (data.replies && data.replies[0] && data.replies[0].reply) || 'สวัสดีครับพี่นุ พร้อมช่วยเหลือแล้วครับ';
+        history.push({role:'assistant', who:'teacher', content:reply});
+        msgCount++;
+        addMsg('ai', reply);
+        speak(reply);
+        setStatus('idle','🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย');
+      }).catch(() => {
+        if (state === 'ended') return;
+        const reply = 'สวัสดีครับพี่นุ! พร้อมช่วยเหลือเรื่องโค้ด เว็บ และ AI แล้วครับ จะให้ครูช่วยอะไรดี?';
+        history.push({role:'assistant', who:'teacher', content:reply});
+        addMsg('ai', reply);
+        speak(reply);
+        setStatus('idle','🎧 ฟังพี่นุอยู่ พิมพ์หรือพูดได้เลย');
+      });
+    }, 1400);
+  }
+
+  startCall();
+})();
+</script>
+</body>
+</html>

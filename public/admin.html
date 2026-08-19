@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>🖥️ CF Bossnusilelo — เบื้องหลัง</title>
+<style>
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    background:#05060f; color:#c9d6e8; font-family:'Consolas','JetBrains Mono','SFMono-Regular',Menlo,monospace;
+    display:flex; flex-direction:column; overflow:hidden; font-size:12.5px;
+  }
+  .topbar{display:flex; align-items:center; gap:10px; padding:10px 14px; background:#0a0c1a; border-bottom:1px solid #1c2140; flex:none}
+  .back{width:32px;height:32px;border-radius:8px;background:#12142a;border:1px solid #232b52;color:#8ea3c8;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;text-decoration:none;flex:none}
+  .back:hover{border-color:#4cc9ff}
+  .tb-t{flex:1; min-width:0}
+  .tb-title{font-size:13px;font-weight:800;color:#e8f1ff;letter-spacing:.3px}
+  .tb-title .tag{background:#123a52; color:#7dd3fc; font-size:9px; padding:2px 8px; border-radius:99px; margin-left:8px; font-weight:700}
+  .tb-sub{font-size:10px;color:#7186a8;margin-top:2px}
+  .tb-status{font-size:10px;color:#4ade80;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);padding:4px 10px;border-radius:99px;font-weight:700;flex:none}
+  .tb-status .blink{animation:blink 1.4s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .screen{flex:1; overflow-y:auto; padding:14px 16px 20px; scrollbar-width:thin; scrollbar-color:#1c2140 transparent}
+  .screen::-webkit-scrollbar{width:8px}
+  .screen::-webkit-scrollbar-thumb{background:#1c2140;border-radius:4px}
+
+  .win{max-width:860px; margin:0 auto; background:#070812; border:1px solid #1c2140; border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .win-bar{display:flex; align-items:center; gap:8px; padding:9px 12px; background:#0b0d1c; border-bottom:1px solid #1c2140}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+  .win-title{flex:1; text-align:center; font-size:10px; color:#7186a8; letter-spacing:1px}
+  .win-title b{color:#8ea3c8}
+  .win-tool{font-size:10px; color:#4cc9ff}
+
+  .term{padding:14px 14px 10px; min-height:420px}
+  .line{white-space:pre-wrap; word-break:break-word; line-height:1.65; animation:pop .15s ease}
+  @keyframes pop{from{opacity:0; transform:translateY(3px)}to{opacity:1; transform:none}}
+  .c-dim{color:#7186a8}
+  .c-grn{color:#4ade80}
+  .c-cyn{color:#7dd3fc}
+  .c-pur{color:#a78bfa}
+  .c-pnk{color:#f472b6}
+  .c-ylw{color:#fbbf24}
+  .c-red{color:#f87171}
+  .c-wht{color:#e8f1ff}
+  .prompt{color:#4ade80}
+  .dir{color:#7dd3fc}
+  .cursor{display:inline-block;width:8px;height:15px;background:#4ade80;vertical-align:-2px;animation:blink 1s steps(1) infinite;margin-left:2px}
+  .tbl{width:100%; border-collapse:collapse; margin:4px 0}
+  .tbl td{padding:2px 8px; font-size:11.5px; white-space:nowrap}
+  .tbl td:nth-child(2){color:#8ea3c8}
+  .tbl td:nth-child(3){color:#7186a8; text-align:right}
+  .tbl td:nth-child(4){color:#4a5875; text-align:right}
+  .tree-line{white-space:pre; font-size:11.5px; line-height:1.7; color:#8ea3c8}
+  .tree-line .fdir{color:#7dd3fc; font-weight:700}
+  .tree-line .fsz{color:#6d83ab}
+  .tree-line .fdt{color:#6b81ab}
+  .out-box{background:#05060f; border:1px solid #1c2140; border-radius:10px; padding:10px 12px; margin:4px 0; white-space:pre-wrap; word-break:break-word; color:#c9d6e8}
+  .out-box.ok{border-color:rgba(74,222,128,.35)}
+  .out-box.err{border-color:rgba(248,113,113,.45); color:#fca5a5}
+
+  .cli{flex:none; border-top:1px solid #1c2140; background:#0a0c1a; padding:10px 14px; display:flex; gap:8px; align-items:center; max-width:860px; margin:0 auto; width:100%}
+  .cli .pr{color:#4ade80; font-size:12.5px; flex:none}
+  .cli input{flex:1; background:none; border:none; outline:none; color:#e8f1ff; font-family:inherit; font-size:12.5px; caret-color:#4ade80}
+  .cli input::placeholder{color:#3d4963}
+  .quick{flex:none; display:flex; gap:6px; flex-wrap:wrap}
+  .q{background:#12142a;border:1px solid #232b52;color:#8ea3c8;font-size:10px;padding:4px 10px;border-radius:99px;cursor:pointer;font-family:inherit;font-weight:700}
+  .q:hover{border-color:#4cc9ff;color:#7dd3fc}
+  .q.unlock{background:linear-gradient(135deg,#3a2a00,#6b4a00);border-color:#e8b923;color:#fff3c4;text-shadow:0 0 8px rgba(255,200,0,.4)}
+  .q.unlock:hover{border-color:#ffd966;color:#fff3c4}
+  body.unlocked .q.unlock{background:linear-gradient(135deg,#6b4a00,#8a5f00);color:#fff3c4;box-shadow:0 0 12px rgba(255,190,0,.45)}
+  body.unlocked .win-bar{background:linear-gradient(90deg,#2a2000,#4a3a00)}
+  body.unlocked .win-title{color:#efe3b8}
+  body.unlocked .win-title b{color:#fff3c4}
+  body.unlocked .topbar{border-bottom-color:#8a6a00}
+  body.unlocked .tb-status{color:#ffd966}
+  #lockBadge{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.5px;background:#1a1f3a;color:#8ea3c8;border:1px solid #232b52;vertical-align:middle}
+  #lockBadge.on{background:linear-gradient(135deg,#6b4a00,#8a5f00);color:#fff3c4;border-color:#e8b923;box-shadow:0 0 14px rgba(255,190,0,.5);animation:pulseGold 1.6s infinite}
+  @keyframes pulseGold{0%,100%{box-shadow:0 0 6px rgba(255,190,0,.35)}50%{box-shadow:0 0 18px rgba(255,190,0,.7)}}
+  .sys-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:6px 0}
+  .sys-cell{background:#0b0e20;border:1px solid #1c2140;border-radius:10px;padding:8px 10px}
+  body.unlocked .sys-cell{border-color:#6b4a00}
+  .sys-cell .k{font-size:9px;color:#6b81ab;letter-spacing:.8px;text-transform:uppercase;font-weight:700}
+  .sys-cell .v{font-size:14px;color:#e8f1ff;font-weight:800;margin-top:2px}
+  .sys-cell .v small{font-size:9px;color:#6b81ab;font-weight:600}
+  @media (max-width:640px){
+    .cli{flex-wrap:wrap}
+    .quick{order:3; width:100%}
+    .term{min-height:340px}
+    body{font-size:11.5px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="/chat/living" title="กลับหน้าแชท">←</a>
+  <div class="tb-t">
+    <div class="tb-title">CF Bossnusilelo <span class="tag">เบื้องหลัง · ADMIN</span></div>
+    <div class="tb-sub">เซิร์ฟเวอร์ Linux · /cfbossnusilelo · ผู้ใช้ทั่วไปมองไม่เห็น</div>
+  </div>
+  <div class="tb-status"><span class="blink">●</span> RUNNING <span id="lockBadge" title="สถานะสิทธิ์">🔒</span></div>
+</div>
+
+<div class="screen" id="screen">
+  <div class="win">
+    <div class="win-bar">
+      <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+      <div class="win-title">พี่นุ@cfbossnusilelo: <b>~</b> — bash</div>
+      <div class="win-tool">🖥️ TERMINAL</div>
+    </div>
+    <div class="term" id="term"></div>
+  </div>
+</div>
+
+<div class="cli">
+  <div class="quick">
+    <button class="q unlock" data-cmd="unlock">👑 UNLOCK MAX</button>
+    <button class="q" data-cmd="sys">🖥️ sys</button>
+    <button class="q" data-cmd="backup">📦 backup</button>
+    <button class="q" data-cmd="reload">♻️ reload</button>
+    <button class="q" data-cmd="help">help</button>
+    <button class="q" data-cmd="ls -la">ls -la</button>
+    <button class="q" data-cmd="tree">tree</button>
+    <button class="q" data-cmd="health">health</button>
+    <button class="q" data-cmd="stats">stats</button>
+    <button class="q" data-cmd="edit public/note.txt|สวัสดี ครู!">edit</button>
+    <button class="q" data-cmd="run py print('สวัสดีจากเซิร์ฟเวอร์!')">run py</button>
+  </div>
+  <span class="pr">$</span>
+  <input id="cmdInp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="พิมพ์คำสั่ง... (help = รายการ)">
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const term = document.getElementById('term');
+  const inp = document.getElementById('cmdInp');
+  const screen = document.getElementById('screen');
+  let busy = false;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function line(html, cls){
+    const d = document.createElement('div');
+    d.className = 'line' + (cls ? ' ' + cls : '');
+    d.innerHTML = html;
+    term.appendChild(d);
+    screen.scrollTop = screen.scrollHeight;
+    return d;
+  }
+  function cmd(c){ line('<span class="prompt">$</span> <span class="c-wht">' + esc(c) + '</span>'); }
+
+  function boot(){
+    const seq = [
+      ['<span class="c-dim">[boot]</span> <span class="c-cyn">พี่นุ@cfbossnusilelo</span> <span class="c-dim">: เข้าสู่ระบบเบื้องหลัง...</span>', ''],
+      ['<span class="c-dim">$ cd /cfbossnusilelo</span>', ''],
+      ['<span class="c-dim">$ ls -la</span>', ''],
+      ['<span class="c-pur">drwxr-xr-x</span> <span class="c-dim">root root</span> <span class="c-grn">api/</span> <span class="c-dim">— สมอง AI (chat.js)</span>', ''],
+      ['<span class="c-pur">-rw-r--r--</span> <span class="c-dim">root root</span> <span class="c-wht">server.js</span> <span class="c-dim">— หัวใจ (รับ-ส่งคำขอ)</span>', ''],
+      ['<span class="c-pur">drwxr-xr-x</span> <span class="c-dim">root root</span> <span class="c-grn">public/</span> <span class="c-dim">— หน้าจอผู้ใช้ (index.html · game.html · call.html)</span>', ''],
+      ['<span class="c-dim">$ node server.js</span>', ''],
+      ['<span class="c-grn">CF Bossnusilelo V.1 on :3000</span> <span class="c-dim">— พร้อมรับสายแล้ว</span>', ''],
+      ['<span class="c-cyn">⏳ กำลังโหลดโมเดล AI...</span> <span class="c-pnk">Thinking...</span> <span class="c-grn">✅ RUNNING</span>', ''],
+      ['<span class="c-dim">─── หลังบ้านพี่นุ · ผู้ใช้ทั่วไปมองไม่เห็น · พิมพ์ <span class="c-wht">help</span> เพื่อดูคำสั่ง ───</span>', '']
+    ];
+    let i = 0;
+    (function next(){
+      if (i < seq.length){
+        line(seq[i][0]);
+        i++;
+        setTimeout(next, i <= 2 ? 350 : 260);
+      } else {
+        inp.disabled = false; inp.focus();
+        line('<span class="cursor"></span>', '');
+        // ตรวจสถานะ 🔓 SUPER ADMIN อัตโนมัติ
+        fetch('/api/sys').then(r => r.json()).then(d => {
+          if (d && d.unlocked){
+            document.body.classList.add('unlocked');
+            const b = document.getElementById('lockBadge');
+            if (b){ b.textContent = '🔓 SUPER ADMIN'; b.classList.add('on'); }
+            line('👑 <span class="c-grn">ยินดีต้อนรับกลับ เจ้าของระบบ!</span> <span class="c-dim">— ระบบอยู่ในโหมด 🔓 UNLOCK MAX (พิมพ์ sys / backup / reload / unlock)</span>');
+          }
+        }).catch(() => {});
+      }
+    })();
+  }
+
+  async function runCmd(raw){
+    const c = raw.trim();
+    if (!c || busy) return;
+    busy = true;
+    cmd(c);
+    const [head, ...rest] = c.split(/\s+/);
+    const arg = rest.join(' ');
+    const lower = head.toLowerCase();
+
+    try{
+      if (lower === 'help'){
+        const h = [
+          '<span class="c-cyn">─── คำสั่งที่ใช้ได้ ───</span>',
+          '<span class="c-wht">help</span>          <span class="c-dim">— รายการคำสั่งนี้</span>',
+          '<span class="c-wht">ls / ls -la</span>   <span class="c-dim">— รายการไฟล์จริงบนเซิร์ฟเวอร์</span>',
+          '<span class="c-wht">tree</span>          <span class="c-dim">— โครงสร้างโฟลเดอร์ทั้งหมด</span>',
+          '<span class="c-wht">cat &lt;ชื่อ&gt;</span>      <span class="c-dim">— อ่านโค้ด (index · chat · server · readme · fix)</span>',
+          '<span class="c-wht">run py &lt;โค้ด&gt;</span>    <span class="c-dim">— รัน Python บนเซิร์ฟเวอร์จริง!</span>',
+          '<span class="c-wht">run js &lt;โค้ด&gt;</span>    <span class="c-dim">— รัน JavaScript (Node) บนเซิร์ฟเวอร์จริง!</span>',
+          '<span class="c-wht">health</span>        <span class="c-dim">— ตรวจสถานะ AI + คีย์ API</span>',
+          '<span class="c-wht">stats</span>         <span class="c-dim">— 📊 สถิติเซิร์ฟเวอร์ + กิจกรรมล่าสุด</span>',
+          '<span class="c-wht">unlock</span>        <span class="c-dim">— 👑 ปลดล็อกสุดขีด (SUPER ADMIN) / ล็อกกลับ</span>',
+          '<span class="c-wht">sys</span>           <span class="c-dim">— 🖥️ สถานะระบบจริง: CPU / RAM / ดิสก์ / PID</span>',
+          '<span class="c-wht">backup</span>        <span class="c-dim">— 📦 สำรองไฟล์ทั้งโปรเจกต์ → ลิงก์ดาวน์โหลด</span>',
+          '<span class="c-wht">reload</span>        <span class="c-dim">— ♻️ รีโหลดโค้ดหัวใจ api/chat.js แบบร้อน</span>',
+          '<span class="c-wht">edit &lt;path&gt;|&lt;เนื้อหา&gt;</span> <span class="c-dim">— ✏️ เขียน/สร้างไฟล์ (backup .bak อัตโนมัติ)</span>',
+          '<span class="c-wht">clear</span>         <span class="c-dim">— ล้างจอ</span>',
+          '<span class="c-wht">back</span>          <span class="c-dim">— กลับหน้าแชท</span>'
+        ];
+        h.forEach(x => line(x));
+      }
+      else if (lower === 'ls' || lower === 'tree'){
+        const r = await fetch('/api/tree'); const d = await r.json();
+        if (!d.files) return line('⚠️ ' + esc(d.error || 'อ่านไม่ได้'), 'c-red');
+        const showTree = lower === 'tree';
+        for (const f of d.files){
+          const depth = f.path.split('/').length - 1;
+          const pad = showTree ? '  '.repeat(depth) : '';
+          const name = f.name;
+          const size = f.dir ? '' : fmtSize(f.size);
+          const date = f.mtime ? f.mtime.slice(0,16).replace('T',' ') : '';
+          if (lower === 'ls'){
+            const perm = f.dir ? 'drwxr-xr-x' : '-rw-r--r--';
+            line('<span class="c-pur">' + perm + '</span> <span class="c-dim">root root</span> <span class="c-grn">' + esc(f.dir ? name + '/' : name) + '</span> <span class="fsz">' + size + '</span> <span class="fdt">' + date + '</span>', 'tree-line');
+          } else {
+            line(pad + (f.dir ? '<span class="fdir">📁 ' + esc(name) + '/</span>' : '<span class="c-wht">📄 ' + esc(name) + '</span>') + ' <span class="fsz">' + size + '</span>', 'tree-line');
+          }
+        }
+        line('<span class="c-dim">' + d.files.length + ' รายการ · ' + esc(d.cwd) + '</span>');
+      }
+      else if (lower === 'cat'){
+        const name = String(arg || '').toLowerCase();
+        const map = { index:'index', chat:'chat', server:'server', readme:'readme', fix:'fix' };
+        const key = map[name] || name;
+        if (!map[name] && !['index','chat','server','readme','fix'].includes(name)) return line('⚠️ ไฟล์ต้องเป็น: index · chat · server · readme · fix', 'c-red');
+        line('<span class="c-dim">อ่าน ' + key + ' จากเซิร์ฟเวอร์...</span>');
+        const r = await fetch('/api/file?name=' + key); const d = await r.json();
+        if (d.error) return line('⚠️ ' + esc(d.error), 'c-red');
+        line('<span class="c-dim">─── ' + esc(d.path) + ' (' + d.length + ' ตัวอักษร) ───</span>');
+        line('<span class="c-cyn">' + esc(d.content.slice(0, 2500)) + '</span>');
+      }
+      else if (lower === 'run'){
+        const lang = String(arg.split(/\s+/)[0] || 'py').toLowerCase();
+        const code = arg.slice(lang.length).trim();
+        if (!code) return line('⚠️ ใส่โค้ดด้วย เช่น: run py print("สวัสดี")', 'c-red');
+        const l = lang === 'js' || lang === 'node' || lang === 'javascript' ? 'javascript' : 'python';
+        line('<span class="c-dim">▶️ รัน ' + l + ' บนเซิร์ฟเวอร์ (8 วิ)...</span>');
+        const r = await fetch('/api/tools', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ tool:'run', lang: l, code }) });
+        const d = await r.json();
+        if (d.ok) line('<span class="c-grn">✓ output:</span>\n<span class="out-box ok">' + esc(d.output) + '</span>');
+        else line('<span class="c-red">✗ error:</span>\n<span class="out-box err">' + esc(d.output || 'รันไม่สำเร็จ') + '</span>');
+      }
+      else if (lower === 'health'){
+        line('<span class="c-dim">ตรวจสอบสถานะระบบ...</span>');
+        const r = await fetch('/api/health'); const d = await r.json();
+        const mk = v => v ? '<span class="c-grn">✅</span>' : '<span class="c-red">❌</span>';
+        line('<span class="c-cyn">─── สถานะเซิร์ฟเวอร์ ───</span>');
+        line('OPENROUTER_API_KEY ' + mk(d.hasKey) + ' <span class="c-dim">(คีย์ AI)</span>');
+        line('โมเดลหลัก: <span class="c-pur">' + esc(d.model || '-') + '</span>');
+        line('GOOGLE_API_KEY ' + mk(d.hasGemini) + ' <span class="c-dim">(' + esc(d.geminiModel || 'gemini-2.5-flash-lite') + ')</span>');
+        line('GROQ_API_KEY ' + mk(d.hasGroq) + ' <span class="c-dim">(' + esc(d.groqModel || 'openai/gpt-oss-120b') + ')</span>');
+        line('เวลาเซิร์ฟเวอร์: <span class="c-ylw">' + esc((d.time || '').slice(0,19).replace('T',' ')) + '</span>');
+      }
+      else if (lower === 'unlock'){
+        const r = await fetch('/api/unlock', { method:'POST' });
+        const d = await r.json();
+        document.body.classList.toggle('unlocked', !!d.unlocked);
+        const b = document.getElementById('lockBadge');
+        if (b){ b.textContent = d.unlocked ? '🔓 SUPER ADMIN' : '🔒'; b.classList.toggle('on', !!d.unlocked); }
+        line(d.unlocked
+          ? '<span class="c-grn">👑 <b>ปลดล็อกสุดขีดแล้ว!</b></span> <span class="c-dim">— สิทธิ์เจ้าของเต็มระบบ: sys / backup / reload / แก้ไฟล์ทุกไฟล์ (ยกเว้นหัวใจ)</span>'
+          : '🔒 ล็อกกลับแล้ว <span class="c-dim">— ระบบกลับสู่โหมดปกติ</span>');
+        if (d.unlocked) line('<span class="c-dim">💡 พิมพ์ <b>sys</b> ดูสถานะระบบ · <b>backup</b> สำรองข้อมูล · <b>reload</b> รีโหลดหัวใจ</span>');
+      }
+      else if (lower === 'sys'){
+        const r = await fetch('/api/sys'); const d = await r.json();
+        line('<span class="c-cyn">──── 🖥️ สถานะระบบ (SUPER ADMIN) ────</span>');
+        line('<div class="sys-grid">' +
+          '<div class="sys-cell"><div class="k">CPU Load</div><div class="v">' + (d.cpu?.load1||0).toFixed(2) + '<small> / ' + d.cpu?.cores + ' คอร์</small></div></div>' +
+          '<div class="sys-cell"><div class="k">RAM</div><div class="v">' + (d.ram?.used||0) + ' <small>/ ' + (d.ram?.total||0) + ' GB (' + (d.ram?.pct||0) + '%)</small></div></div>' +
+          '<div class="sys-cell"><div class="k">ดิสก์ว่าง</div><div class="v">' + (d.disk?.free||0) + ' <small>/ ' + (d.disk?.total||0) + ' GB</small></div></div>' +
+          '<div class="sys-cell"><div class="k">อัปไทม์</div><div class="v">' + Math.floor((d.uptime||0)/60) + '<small> นาที</small></div></div>' +
+          '<div class="sys-cell"><div class="k">PID</div><div class="v">' + (d.pid||'-') + '</div></div>' +
+          '<div class="sys-cell"><div class="k">Node</div><div class="v">' + esc(d.node||'-') + '</div></div>' +
+          '</div>');
+        line('<span class="c-dim">' + esc(d.platform||'') + ' · ' + esc(d.arch||'') + ' · ' + esc(d.cwd||'') + (d.unlocked ? ' · <b class="c-grn">🔓 UNLOCKED</b>' : ' · 🔒 locked') + '</span>');
+      }
+      else if (lower === 'backup'){
+        line('<span class="c-dim">📦 กำลังสำรองข้อมูลทั้งโปรเจกต์...</span>');
+        const r = await fetch('/api/backup', { method:'POST' });
+        const d = await r.json();
+        if (d.ok) line('✅ <span class="c-grn">สำรองข้อมูลสำเร็จ</span> <span class="c-dim">(' + fmtSize(d.size) + ')</span> — <a class="c-cyn" href="' + esc(d.url) + '" target="_blank" style="text-decoration:underline">⬇️ ดาวน์โหลดไฟล์สำรอง</a>');
+        else line('⚠️ ' + esc(d.error || 'สำรองไม่สำเร็จ'), 'c-red');
+      }
+      else if (lower === 'reload'){
+        line('<span class="c-dim">♻️ รีโหลดโค้ดหัวใจ (api/chat.js) แบบร้อน...</span>');
+        const r = await fetch('/api/reload', { method:'POST' });
+        const d = await r.json();
+        if (d.ok) line('✅ <span class="c-grn">รีโหลดสำเร็จ</span> <span class="c-dim">— สถิติยังอยู่ครบ (reloads: ' + d.reloads + ') · เวลา ' + esc((d.reloaded||'').slice(11,19)) + '</span>');
+        else line('⚠️ ' + esc(d.error || 'รีโหลดไม่สำเร็จ'), 'c-red');
+      }
+      else if (lower === 'stats'){
+        const r = await fetch('/api/stats'); const d = await r.json();
+        line('<span class="c-dim">' + esc(d.version || '') + '</span> ' + (d.unlocked ? '<span class="c-grn">🔓 UNLOCKED</span>' : '<span class="c-dim">🔒</span>') + ' <span class="c-dim">· PID ' + (d.pid||'-') + ' · ' + esc(d.node||'') + '</span>');
+        const up = d.uptime || 0;
+        const hh = Math.floor(up/3600), mm = Math.floor(up%3600/60), ss = up%60;
+        line('<span class="c-cyn">──── 📊 สถิติเซิร์ฟเวอร์ ────</span>');
+        line('ออนไลน์: <span class="c-grn">' + hh + ' ชม ' + mm + ' นาที ' + ss + ' วิ</span> <span class="c-dim">(เริ่ม ' + esc((d.boot||'').slice(0,19).replace('T',' ')) + ')</span>');
+        line('คำขอทั้งหมด: <span class="c-pur">' + d.requests + '</span> · ข้อความแชท: <span class="c-pur">' + d.messages + '</span> · reloads: <span class="c-pur">' + (d.reloads||0) + '</span>');
+        line('รันโค้ด: <span class="c-pur">' + d.tools + '</span> · ไฟล์: <span class="c-pur">' + d.files + '</span> · เช็คสุขภาพ: <span class="c-pur">' + d.health + '</span> · ข้อผิดพลาด: <span class="c-pur">' + d.errors + '</span>');
+        line('<span class="c-cyn">──── 🕘 กิจกรรมล่าสุด ────</span>');
+        if (!(d.log || []).length) line('<span class="c-dim">(ยังไม่มีกิจกรรม)</span>');
+        else (d.log || []).slice(-8).forEach(l => line('<span class="c-dim">' + esc((l.t||'').slice(11,19)) + '</span> <span class="c-grn">[' + esc(l.level) + ']</span> ' + esc(l.msg), 'tree-line'));
+      }
+      else if (lower === 'edit'){
+        const pipe = arg.indexOf('|');
+        const fpath = pipe >= 0 ? arg.slice(0, pipe).trim() : arg.trim();
+        const content = pipe >= 0 ? arg.slice(pipe + 1) : '';
+        if (!fpath) return line('⚠️ ใช้: edit <path>|<เนื้อหา> — เช่น edit public/note.txt|สวัสดี ครู!', 'c-red');
+        if (pipe < 0) return line('⚠️ ต้องมี | คั่น path กับเนื้อหา: edit public/note.txt|ข้อความ...', 'c-red');
+        line('<span class="c-dim">✏️ เขียน ' + esc(fpath) + ' (backup อัตโนมัติ)...</span>');
+        const r = await fetch('/api/file', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ path: fpath, content }) });
+        const d = await r.json();
+        if (d.ok) line('✅ <span class="c-grn">บันทึกแล้ว:</span> <span class="c-wht">' + esc(d.path) + '</span> <span class="c-dim">(' + content.length + ' ตัวอักษร' + (d.backup ? ' · สำรองที่ .bak' : ' · สร้างไฟล์ใหม่') + ')</span>');
+        else line('⚠️ ' + esc(d.error || 'เขียนไม่สำเร็จ'), 'c-red');
+      }
+      else if (lower === 'clear'){
+        term.innerHTML = '';
+      }
+      else if (lower === 'back' || lower === 'exit'){
+        location.href = '/chat/living';
+      }
+      else if (lower === 'echo'){
+        line('<span class="c-wht">' + esc(arg) + '</span>');
+      }
+      else {
+        line('<span class="c-red">bash: ' + esc(head) + ': ไม่รู้จักคำสั่ง</span> <span class="c-dim">— พิมพ์ help</span>');
+      }
+    }catch(e){
+      line('<span class="c-red">⚠️ error: ' + esc(e.message) + '</span>');
+    }
+    busy = false;
+    line('<span class="cursor"></span>', '');
+    screen.scrollTop = screen.scrollHeight;
+  }
+
+  function fmtSize(n){
+    if (n >= 1024*1024) return (n/1024/1024).toFixed(1) + ' MB';
+    if (n >= 1024) return (n/1024).toFixed(1) + ' KB';
+    return n + ' B';
+  }
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter'){ const v = inp.value; inp.value = ''; runCmd(v); }
+  });
+  document.querySelectorAll('.q').forEach(b => b.addEventListener('click', () => runCmd(b.dataset.cmd)));
+  inp.disabled = true;
+  boot();
+})();
+</script>
+</body>
+</html>

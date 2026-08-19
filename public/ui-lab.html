@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧪 UI Lab — ลองทุกตัว!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#0e0e12;color:#fff;padding:36px 20px 60px;min-height:100vh}
+  .hero{text-align:center;margin-bottom:36px}
+  .hero h1{font-size:30px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,#a78bfa,#f472b6,#fb923c);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:#9ca3af;margin-top:8px;font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;max-width:1200px;margin:0 auto}
+  .tile{background:#16161d;border:1px solid #26262f;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .tile-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #26262f}
+  .tile-head h3{font-size:14px;font-weight:700}
+  .tile-head span{font-size:11px;color:#9ca3af}
+  .tile .demo{flex:1;display:flex;flex-direction:column;padding:14px;gap:10px;min-height:250px}
+  .tile .composer-demo{margin-top:auto;display:flex;gap:6px}
+  .tile .composer-demo input{flex:1;min-width:0}
+  .tile .composer-demo button{flex-shrink:0}
+  .mini-msg{max-width:82%;padding:8px 12px;font-size:12.5px;line-height:1.5;align-self:flex-start}
+  .mini-msg.user{align-self:flex-end}
+  .mini-meta{font-size:10px;opacity:.65;margin-top:3px}
+  .foot{text-align:center;margin-top:40px;color:#6b7280;font-size:12.5px}
+  .foot b{color:#a78bfa}
+
+  /* ============ 1. BOOTSTRAP ============ */
+  .th-bs{background:#f8f9fa;color:#212529;font-family:system-ui,sans-serif}
+  .th-bs .mini-msg{background:#e9ecef;border-radius:6px}
+  .th-bs .mini-msg.user{background:#0d6efd;color:#fff}
+  .th-bs input{border:1px solid #ced4da;border-radius:4px;padding:8px 10px;font-size:12.5px;background:#fff;color:#212529}
+  .th-bs button{border:none;background:#0d6efd;color:#fff;border-radius:4px;padding:8px 14px;font-size:12.5px;cursor:pointer}
+
+  /* ============ 2. DAISYUI ============ */
+  .th-daisy{background:#ffffff;color:#1f2937;font-family:system-ui,sans-serif}
+  .th-daisy .mini-msg{background:#f0f9ff;border:1px solid #bae6fd;border-radius:18px;border-top-left-radius:4px}
+  .th-daisy .mini-msg.user{background:#0ea5e9;color:#fff;border-color:#0ea5e9;border-top-left-radius:18px;border-top-right-radius:4px}
+  .th-daisy input{border:2px solid #e2e8f0;border-radius:9999px;padding:8px 14px;font-size:12.5px;background:#fff}
+  .th-daisy button{border:2px solid #0ea5e9;background:#0ea5e9;color:#fff;border-radius:9999px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer}
+
+  /* ============ 3. FLOWBITE ============ */
+  .th-fb{background:#f9fafb;color:#111827;font-family:system-ui,sans-serif}
+  .th-fb .mini-msg{background:#f3f4f6;border-radius:8px}
+  .th-fb .mini-msg.user{background:#2563eb;color:#fff}
+  .th-fb input{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:12.5px;background:#fff}
+  .th-fb button{border:none;background:#2563eb;color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+
+  /* ============ 4. SHADCN/UI ============ */
+  .th-shadcn{background:#fafafa;color:#18181b}
+  .th-shadcn .mini-msg{background:#f4f4f5;border:1px solid #e4e4e7;border-radius:8px}
+  .th-shadcn .mini-msg.user{background:#18181b;color:#fafafa}
+  .th-shadcn input{border:1px solid #e4e4e7;border-radius:8px;padding:8px 10px;font-size:12.5px;background:#fff;color:#18181b}
+  .th-shadcn button{border:none;background:#18181b;color:#fafafa;border-radius:8px;padding:8px 14px;font-size:12.5px;cursor:pointer}
+
+  /* ============ 5. MATERIAL UI ============ */
+  .th-mui{background:#fafafa;color:#212121;font-family:system-ui,sans-serif}
+  .th-mui .mini-msg{background:#f5f5f5;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .th-mui .mini-msg.user{background:#1976d2;color:#fff}
+  .th-mui input{border:1px solid #c8c8c8;border-radius:4px;padding:8px 10px;font-size:12.5px;background:#fff}
+  .th-mui button{border:none;background:#1976d2;color:#fff;border-radius:4px;padding:8px 14px;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;box-shadow:0 2px 4px rgba(25,118,210,.4);cursor:pointer}
+
+  /* ============ 6. CHAKRA UI ============ */
+  .th-chakra{background:#f7fafc;color:#2d3748;font-family:system-ui,sans-serif}
+  .th-chakra .mini-msg{background:#edf2f7;border-radius:8px}
+  .th-chakra .mini-msg.user{background:#3182ce;color:#fff}
+  .th-chakra input{border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;font-size:12.5px;background:#fff;transition:box-shadow .15s}
+  .th-chakra button{border:none;background:#3182ce;color:#fff;border-radius:6px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+
+  /* ============ 7. ACETERNITY UI ============ */
+  .th-acet{background:linear-gradient(135deg,#0b0618,#1a0b2e 45%,#2a0a2e);color:#fff;position:relative;overflow:hidden}
+  .th-acet::before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 30% 20%,rgba(168,85,247,.28),transparent 45%),radial-gradient(circle at 75% 70%,rgba(244,114,182,.22),transparent 45%);pointer-events:none}
+  .th-acet>*{position:relative}
+  .th-acet .mini-msg{background:rgba(255,255,255,.09);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.16);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .th-acet .mini-msg.user{background:linear-gradient(135deg,#8b5cf6,#ec4899);border-color:rgba(255,255,255,.25)}
+  .th-acet input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:9px 12px;font-size:12.5px;color:#fff;backdrop-filter:blur(8px)}
+  .th-acet input::placeholder{color:rgba(255,255,255,.5)}
+  .th-acet button{border:none;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border-radius:12px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(168,85,247,.4)}
+
+  /* ============ 8. MAGIC UI ============ */
+  .th-magic{background:#030014;color:#fff;position:relative;overflow:hidden}
+  .th-magic::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(120,119,198,.16),transparent 55%);pointer-events:none}
+  .th-magic>*{position:relative}
+  .th-magic .mini-msg{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px}
+  .th-magic .mini-msg.user{background:linear-gradient(135deg,#6366f1,#a855f7);border:1px solid rgba(255,255,255,.18);box-shadow:0 0 24px rgba(139,92,246,.35)}
+  .th-magic input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 12px;font-size:12.5px;color:#fff}
+  .th-magic input::placeholder{color:rgba(255,255,255,.4)}
+  .th-magic button{border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border-radius:12px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:0 0 20px rgba(139,92,246,.45)}
+
+  /* ============ 9. HYPERUI ============ */
+  .th-hyper{background:#ffffff;color:#1f2937;font-family:system-ui,sans-serif}
+  .th-hyper .mini-msg{background:#eef2ff;border-radius:10px}
+  .th-hyper .mini-msg.user{background:#4f46e5;color:#fff}
+  .th-hyper input{border:1px solid #d1d5db;border-radius:10px;padding:8px 10px;font-size:12.5px;background:#fff}
+  .th-hyper button{border:none;background:#4f46e5;color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>🧪 UI Lab — ลองทุกตัว!</h1>
+  <p>9 ธีม UI ยอดฮิต แต่งชุดเดียวกับแชทพี่นุ — เทียบกันเห็นชัด ๆ</p>
+</div>
+
+<div class="grid">
+
+  <!-- 1 Bootstrap -->
+  <div class="tile"><div class="tile-head"><h3>Bootstrap</h3><span>🥉 มือใหม่</span></div>
+    <div class="demo th-bs">
+      <div class="mini-msg">สวัสดีครับ! 👋 เรียน Bootstrap กันเถอะ</div>
+      <div class="mini-msg user">ปุ่มสีฟ้าแบบนี้เลยเหรอครับ?</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 2 DaisyUI -->
+  <div class="tile"><div class="tile-head"><h3>DaisyUI</h3><span>🥉 สดใส</span></div>
+    <div class="demo th-daisy">
+      <div class="mini-msg">ฟองแชทกลม ๆ สีฟ้าสด! 🌊</div>
+      <div class="mini-msg user">ปุ่มกลมด้วย! คลาสสิกมาก</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 3 Flowbite -->
+  <div class="tile"><div class="tile-head"><h3>Flowbite</h3><span>🥉 เรียบโปร</span></div>
+    <div class="demo th-fb">
+      <div class="mini-msg">สไตล์เว็บยุคใหม่ เน้นอ่านง่าย</div>
+      <div class="mini-msg user">สีน้ำเงินเข้ม ดูจริงจังดี</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 4 shadcn/ui -->
+  <div class="tile"><div class="tile-head"><h3>shadcn/ui</h3><span>⭐ ฮิตที่สุด</span></div>
+    <div class="demo th-shadcn">
+      <div class="mini-msg">เรียบ สะอาด มินิมอลสุด ๆ 🤍</div>
+      <div class="mini-msg user">โค้ดคัดลอกได้ 100% เลยเหรอ</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 5 Material UI -->
+  <div class="tile"><div class="tile-head"><h3>Material UI</h3><span>🥈 สไตล์ Google</span></div>
+    <div class="demo th-mui">
+      <div class="mini-msg">วัสดุ เงา ลอย ๆ แบบ Google 🎨</div>
+      <div class="mini-msg user">ปุ่มตัวพิมพ์ใหญ่ ดูเป็นทางการ!</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 6 Chakra UI -->
+  <div class="tile"><div class="tile-head"><h3>Chakra UI</h3><span>🥈 เป็นมิตร</span></div>
+    <div class="demo th-chakra">
+      <div class="mini-msg">เรียบง่าย ใจดีกับมือใหม่ 😊</div>
+      <div class="mini-msg user">ฟองแชทดูนุ่ม ๆ ดีครับ</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 7 Aceternity -->
+  <div class="tile"><div class="tile-head"><h3>Aceternity UI</h3><span>🥇 สายเท่</span></div>
+    <div class="demo th-acet">
+      <div class="mini-msg">ฟุ้ง ๆ กระจกใส สายมืดมน ✨</div>
+      <div class="mini-msg user">ว้าว! ปุ่มไล่สี ปังมาก!</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 8 Magic UI -->
+  <div class="tile"><div class="tile-head"><h3>Magic UI</h3><span>🥇 เท่เว่อร์</span></div>
+    <div class="demo th-magic">
+      <div class="mini-msg">กลางคืนสีม่วง พร้อมแสงนีออน 🌌</div>
+      <div class="mini-msg user">ดูมีเวทมนตร์จริง ๆ! 🪄</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+  <!-- 9 HyperUI -->
+  <div class="tile"><div class="tile-head"><h3>HyperUI</h3><span>🥉 รวมเยอะ</span></div>
+    <div class="demo th-hyper">
+      <div class="mini-msg">สีสันสดใส แบบ Tailwind แท้ ๆ</div>
+      <div class="mini-msg user">ครบทุกชิ้น ฟรีด้วย! 🎁</div>
+      <div class="composer-demo"><input placeholder="พิมพ์..."><button>ส่ง</button></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="foot">🧪 <b>UI Lab</b> — ลองทุกตัวที่ครูแนะนำ 9 ธีม ฟรีทุกตัว! อยากได้ธีมไหนใส่ให้แอพจริง บอกครูได้เลย!</div>
+</body>
+</html>
