@@ -1,4 +1,4 @@
-// api/chat.js - CF Bossnusilelo V.2 API Handler
+// api/chat.js - CF Bossnusilelo V.2 API Handler (GROQ)
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -13,60 +13,37 @@ export default async function handler(req, res) {
     opt = {} 
   } = req.body;
   
-  // เลือกใช้ SiliconFlow เป็นหลัก ถ้าไม่มีคีย์ ค่อยใช้ OpenRouter
-  const SILICON_KEY = process.env.SILICONFLOW_API_KEY;
-  const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
+  // ใช้ Groq API เป็นหลัก
+  const GROQ_KEY = process.env.GROQ_API_KEY;
   
   let provider, url, body, headers;
 
-  if (SILICON_KEY) {
-    // ✅ ใช้ SiliconFlow เป็นหลัก — เร็ว+ถูกกว่า
-    provider = 'siliconflow';
-    url = process.env.SILICONFLOW_BASE || 'https://api.siliconflow.cn/v1/chat/completions';
-    body = {
-      model: process.env.SILICONFLOW_MODEL || 'deepseek-ai/DeepSeek-V3',
-      messages: [
-        { role: 'system', content: getPersona(room, who, opt) },
-        ...history.map(h => ({
-          role: h.role,
-          content: h.content
-        })),
-        { role: 'user', content: question }
-      ],
-      max_tokens: 768,
-      temperature: 0.7
-    };
-    headers = {
-      'Authorization': `Bearer ${SILICON_KEY}`,
-      'Content-Type': 'application/json'
-    };
-  } else if (OPENROUTER_KEY) {
-    // ✅ สำรอง — ใช้ OpenRouter
-    provider = 'openrouter';
-    url = 'https://openrouter.ai/api/v1/chat/completions';
-    body = {
-      model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4-pro',
-      messages: [
-        { role: 'system', content: getPersona(room, who, opt) },
-        ...history.map(h => ({
-          role: h.role,
-          content: h.content
-        })),
-        { role: 'user', content: question }
-      ],
-      max_tokens: 768,
-      temperature: 0.7
-    };
-    headers = {
-      'Authorization': `Bearer ${OPENROUTER_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.VERCEL_URL || 'https://example.com'
-    };
-  } else {
+  if (!GROQ_KEY) {
     return res.status(400).json({ 
-      error: 'ยังไม่ได้ตั้งค่า API_KEY — กรุณาตั้ง SILICONFLOW_API_KEY หรือ OPENROUTER_API_KEY ใน Environment Variables' 
+      error: 'ยังไม่ได้ตั้งค่า GROQ_API_KEY — กรุณาตั้งค่าใน Environment Variables' 
     });
   }
+
+  // ✅ ใช้ Groq API
+  provider = 'groq';
+  url = 'https://api.groq.com/openai/v1/chat/completions';
+  body = {
+    model: process.env.GROQ_MODEL || 'mixtral-8x7b-32768',
+    messages: [
+      { role: 'system', content: getPersona(room, who, opt) },
+      ...history.map(h => ({
+        role: h.role,
+        content: h.content
+      })),
+      { role: 'user', content: question }
+    ],
+    max_tokens: 768,
+    temperature: 0.7
+  };
+  headers = {
+    'Authorization': `Bearer ${GROQ_KEY}`,
+    'Content-Type': 'application/json'
+  };
 
   try {
     const response = await fetch(url, {
@@ -87,13 +64,13 @@ export default async function handler(req, res) {
 
     const reply = data.choices?.[0]?.message?.content || 'ขอโทษค่ะ ตอบไม่ได้';
     
-    // ✅ ส่งกลับมา หน้าเว็บจะแสดงผล + เลือกว่าตอบจากใคร (สลี่ หรือ ครู)
+    // ✅ ส่งกลับมา หน้าเว็บจะแสดงผล
     res.status(200).json({ 
       replies: [
         {
           reply: reply,
           who: who === 'silelo' ? 'silelo' : (who === 'teacher' ? 'teacher' : 'silelo'),
-          model: data.model || (SILICON_KEY ? process.env.SILICONFLOW_MODEL : process.env.OPENROUTER_MODEL)
+          model: data.model || (process.env.GROQ_MODEL || 'mixtral-8x7b-32768')
         }
       ],
       provider
