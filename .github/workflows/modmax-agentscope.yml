@@ -1,0 +1,31 @@
+name: MOD MAX #1 — AgentScope
+
+on:
+  push:
+    paths:
+      - 'modmax/tests/agentscope_smoke.py'
+      - '.github/workflows/modmax-agentscope.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout CF Boss
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install AgentScope
+        run: python -m pip install --upgrade pip agentscope
+
+      - name: Run safe smoke test
+        run: python modmax/tests/agentscope_smoke.py
