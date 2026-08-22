@@ -31,6 +31,17 @@ test('validates question before calling the provider', async () => {
   assert.equal(out.body.error, 'กรุณาระบุ question');
 });
 
+test('rejects an oversized question before calling the provider', async () => {
+  const out = await invoke({ method: 'POST', body: { question: 'x'.repeat(4001) } });
+  assert.equal(out.statusCode, 400);
+});
+
+test('rejects invalid option objects', async () => {
+  const out = await invoke({ method: 'POST', body: { question: 'hello', opt: 'bad' } });
+  assert.equal(out.statusCode, 400);
+  assert.equal(out.body.error, 'opt ไม่ถูกต้อง');
+});
+
 test('returns service-unavailable when the provider key is missing', async () => {
   const previous = process.env.GROQ_API_KEY;
   delete process.env.GROQ_API_KEY;
