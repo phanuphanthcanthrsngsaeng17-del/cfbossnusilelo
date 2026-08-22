@@ -3,11 +3,22 @@
   "framework": null,
   "installCommand": "npm install",
   "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/", "destination": "/chat.html" },
+    { "source": "/chat", "destination": "/chat.html" },
+    { "source": "/chat/:path*", "destination": "/chat.html" },
+    { "source": "/fleet", "destination": "/chat.html" },
+    { "source": "/sandbox", "destination": "/chat.html" },
+    { "source": "/code", "destination": "/chat.html" },
+    { "source": "/chat-v2.html", "destination": "/chat.html" },
+    { "source": "/cf-room.html", "destination": "/chat.html" },
+    { "source": "/sandbox-room.html", "destination": "/chat.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate" },
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" },
         { "key": "Pragma", "value": "no-cache" },
         { "key": "Expires", "value": "0" }
       ]
