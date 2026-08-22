@@ -6,7 +6,7 @@
   "rewrites":[
     {"source":"/","destination":"/boss-home.html"},
     {"source":"/chat","destination":"/boss-home.html"},
-    {"source":"/chat/:path*","destination":"/jarvis-living.html"},
+    {"source":"/chat/:path*","destination":"/jarvis-living-key.html"},
     {"source":"/fleet","destination":"/boss-home.html"},
     {"source":"/sandbox","destination":"/boss-home.html"},
     {"source":"/code","destination":"/boss-home.html"},
