@@ -16,6 +16,7 @@ const { execFileSync } = require('child_process');
 let chatRouter = require(path.join(__dirname, 'api/chat.js'));
 
 const HTML_FILE = path.join(__dirname, 'public', 'index.html');
+const CHAT_FILE = path.join(__dirname, 'public', 'chat.html');
 const BACKUP_DIR = path.join(__dirname, 'public', 'backups');
 
 function wrapRes(res) {
@@ -66,8 +67,6 @@ function createBackup() {
   return { file: out, url: '/backups/' + path.basename(out), size: fs.statSync(out).size };
 }
 
-// reload หัวใจแบบร้อน: re-require api/chat.js (สถิติเดิมยังอยู่ เพราะอยู่ในตัวแปร global? ไม่ — อยู่ข้างใน module — หายเมื่อ reload)
-// → เราเก็บ STATS ไว้ที่ global เพื่อให้ reload ไม่ล้างสถิติ
 function reloadHeart() {
   try {
     delete require.cache[require.resolve(path.join(__dirname, 'api/chat.js'))];
@@ -79,11 +78,19 @@ function reloadHeart() {
   }
 }
 
+function serveChatPage(res) {
+  let html = fs.readFileSync(CHAT_FILE, 'utf8');
+  if (!html.includes('/boss-ui.js')) {
+    html = html.replace('</body>', '<script src="/boss-ui.js?v=1"></script></body>');
+  }
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(html);
+}
+
 http.createServer((req, res) => {
   const url = req.url.split('?')[0];
-  const R = wrapRes(res); // wrapper สำหรับ SUPER ADMIN API
+  const R = wrapRes(res);
 
-  // ---------- 🔓 SUPER ADMIN API (จัดการก่อนทุกอย่าง) ----------
   if (req.method === 'GET' && url === '/api/sys') {
     return R.json(sysInfo());
   }
@@ -106,7 +113,6 @@ http.createServer((req, res) => {
     return R.json(r);
   }
 
-  // ---------- หน้าเว็บ & ไฟล์ static ----------
   if (req.method === 'GET' && url.startsWith('/backups/')) {
     const f = path.join(BACKUP_DIR, path.basename(url));
     if (fs.existsSync(f)) {
@@ -116,7 +122,11 @@ http.createServer((req, res) => {
     res.writeHead(404); return res.end('ไม่พบไฟล์สำรอง');
   }
 
-  if (req.method === 'GET' && (url === '/' || url === '/chat' || url === '/game.html' || url === '/shadcn-demo.html' || url === '/ui-lab.html' || url === '/call.html' || url === '/admin.html' || /^\/chat\/[\w-]+\/?$/.test(url))) {
+  if (req.method === 'GET' && /^\/chat\/[\w-]+\/?$/.test(url)) {
+    return serveChatPage(res);
+  }
+
+  if (req.method === 'GET' && (url === '/' || url === '/chat' || url === '/game.html' || url === '/shadcn-demo.html' || url === '/ui-lab.html' || url === '/call.html' || url === '/admin.html')) {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     const page = url === '/game.html' ? __dirname + '/public/game.html' : url === '/shadcn-demo.html' ? __dirname + '/public/shadcn-demo.html' : url === '/ui-lab.html' ? __dirname + '/public/ui-lab.html' : url === '/call.html' ? __dirname + '/public/call.html' : url === '/admin.html' ? __dirname + '/public/admin.html' : HTML_FILE;
     res.end(fs.readFileSync(page));
@@ -125,7 +135,7 @@ http.createServer((req, res) => {
     req.on('data', c => body += c);
     req.on('end', () => {
       try { req.body = JSON.parse(body); } catch { req.body = {}; }
-      chatRouter(req, wrapRes(res)); // ผ่าน hot-reload handler
+      chatRouter(req, wrapRes(res));
     });
   }
 }).listen(process.env.PORT || 3000, () => console.log('🔓 CF Bossnusilelo V.2 (SUPER ADMIN) on :' + (process.env.PORT || 3000)));
