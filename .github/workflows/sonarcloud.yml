@@ -7,28 +7,31 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  sonarcloud:
-    name: SonarCloud Quality Gate
+  quality:
+    name: Tests + SonarCloud Quality Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # จำเป็น — SonarCloud ต้องดูประวัติ commits
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies (ถ้ามี)
+      - name: Install dependencies
         run: |
           if [ -f package.json ]; then
             npm ci --ignore-scripts || npm install --ignore-scripts
           fi
 
+      - name: Run tests
+        run: npm test
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # สร้างให้อัตโนมัติ ไม่ต้องตั้ง
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # ← คีย์ที่เพิ่งสร้าง ใส่ที่นี่
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
