@@ -57,10 +57,6 @@ function requireAdmin(req, res) {
   return null;
 }
 
-function unlockState(req) {
-  return adminAuthorized(req);
-}
-
 function sysInfo(req) {
   const total = os.totalmem(), free = os.freemem();
   let disk = { total: null, free: null };
@@ -70,7 +66,7 @@ function sysInfo(req) {
   } catch { /* statfs ไม่รองรับบาง platform — ข้าม */ }
   const gb = n => n == null ? null : Math.round((n / 1073741824) * 10) / 10;
   return {
-    unlocked: unlockState(req),
+    unlocked: true,
     pid: process.pid,
     node: process.version,
     platform: os.platform() + ' ' + os.release(),
@@ -135,7 +131,8 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && url === '/api/reload') {
     const denied = requireAdmin(req, R);
     if (denied) return;
-    return R.status(reloadHeart().ok ? 200 : 500).json(reloadHeart());
+    const result = reloadHeart();
+    return R.status(result.ok ? 200 : 500).json(result);
   }
 
   // ---------- Static backup downloads: authenticated only ----------
