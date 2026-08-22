@@ -1,13 +1,24 @@
 {
-  "buildCommand": "npm install",
-  "outputDirectory": "public",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm install",
-  "routes": [
-    { "src": "/", "dest": "/public/chat-v2.html" },
-    { "src": "/api/chat", "dest": "/api/chat.js" },
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/chat/(.*)", "dest": "/public/chat-v2.html" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/", "destination": "/chat-v2.html" },
+    { "source": "/chat/:path*", "destination": "/chat-v2.html" }
+  ],
+  "headers": [
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/chat-v2.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    }
   ]
 }
