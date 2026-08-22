@@ -4,7 +4,8 @@
   "description": "บอทสลี่ — แชท AI 3 คน (สลี่ + ครู CodingFleet + พี่นุ)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"
