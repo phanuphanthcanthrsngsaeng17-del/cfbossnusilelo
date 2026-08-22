@@ -1,62 +1,87 @@
 // ============================================================
-// CF Bossnusilelo V.2 — SUPER ADMIN MODE 🔓
-// - /api/sys     : สถานะระบบจริง (CPU/RAM/ดิสก์/อัปไทม์)
-// - /api/backup  : สำรองไฟล์ทั้งโปรเจกต์เป็น zip → ลิงก์ดาวน์โหลด
-// - /api/reload  : รีโหลดโค้ดหัวใจ (api/chat.js) แบบร้อน ไม่ต้องรีบูต
-// - /api/unlock  : สลับโหมด 🔓 SUPER ADMIN (สิทธิ์เจ้าของ)
-// - ระบบ hot-reload: แก้ api/chat.js → POST /api/reload → มีผลทันที
+// CF Bossnusilelo V.2 — production-hardened server
+// - Admin endpoints are fail-closed behind ADMIN_TOKEN.
+// - Chat handler is hot-reloadable for trusted admin use.
 // ============================================================
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
-// ตัวแปรชี้ handler — เปลี่ยนได้ตอนรัน (hot reload)
-let chatRouter = require(path.join(__dirname, 'api/chat.js'));
+const CHAT_HANDLER_PATH = path.join(__dirname, 'api/chat.js');
+let chatRouter = require(CHAT_HANDLER_PATH);
 
 const HTML_FILE = path.join(__dirname, 'public', 'index.html');
 const BACKUP_DIR = path.join(__dirname, 'public', 'backups');
+const MAX_BODY_BYTES = 1024 * 1024;
 
 function wrapRes(res) {
   return {
     setHeader: (k, v) => res.setHeader(k, v),
     status: function (c) { res.statusCode = c; return this; },
     json: function (o) {
-      res.writeHead(res.statusCode || 200, { 'Content-Type': 'application/json' });
+      res.writeHead(res.statusCode || 200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify(o));
     }
   };
 }
 
-function unlockState() {
-  return !!global.SUPER_ADMIN;
+function adminTokenFromRequest(req) {
+  const auth = typeof req.headers.authorization === 'string' ? req.headers.authorization : '';
+  if (auth.startsWith('Bearer ')) return auth.slice(7).trim();
+  const headerToken = req.headers['x-admin-token'];
+  return typeof headerToken === 'string' ? headerToken.trim() : '';
 }
 
-function sysInfo() {
+function adminAuthorized(req) {
+  const expected = process.env.ADMIN_TOKEN;
+  const presented = adminTokenFromRequest(req);
+  if (!expected || expected.length < 32 || !presented) return false;
+  const a = Buffer.from(presented);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function requireAdmin(req, res) {
+  if (!process.env.ADMIN_TOKEN || process.env.ADMIN_TOKEN.length < 32) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(503).json({ error: 'ADMIN_TOKEN is not configured' });
+  }
+  if (!adminAuthorized(req)) {
+    res.setHeader('WWW-Authenticate', 'Bearer realm="CF Bossnusilelo Admin"');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  return null;
+}
+
+function unlockState(req) {
+  return adminAuthorized(req);
+}
+
+function sysInfo(req) {
   const total = os.totalmem(), free = os.freemem();
   let disk = { total: null, free: null };
   try {
     const st = fs.statfsSync(__dirname);
     disk = { total: st.blocks * st.bsize, free: st.bfree * st.bsize };
   } catch { /* statfs ไม่รองรับบาง platform — ข้าม */ }
-  const gb = n => Math.round((n / 1073741824) * 10) / 10;
+  const gb = n => n == null ? null : Math.round((n / 1073741824) * 10) / 10;
   return {
-    unlocked: unlockState(),
+    unlocked: unlockState(req),
     pid: process.pid,
     node: process.version,
     platform: os.platform() + ' ' + os.release(),
     arch: os.arch(),
-    hostname: os.hostname(),
     uptime: Math.round(process.uptime()),
     cpu: { load1: os.loadavg()[0], load5: os.loadavg()[1], load15: os.loadavg()[2], cores: os.cpus().length, model: os.cpus()[0]?.model?.trim() },
     ram: { total: gb(total), free: gb(free), used: gb(total - free), pct: Math.round(((total - free) / total) * 100) },
-    disk: { total: gb(disk.total), free: gb(disk.free) },
-    cwd: __dirname
+    disk: { total: gb(disk.total), free: gb(disk.free) }
   };
 }
 
-// zip โปรเจกต์ (ไม่รวม node_modules/.git/ซิปเก่า) — ใช้คำสั่ง zip ในเครื่อง
 function createBackup() {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
   const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -66,51 +91,64 @@ function createBackup() {
   return { file: out, url: '/backups/' + path.basename(out), size: fs.statSync(out).size };
 }
 
-// reload หัวใจแบบร้อน: re-require api/chat.js (สถิติเดิมยังอยู่ เพราะอยู่ในตัวแปร global? ไม่ — อยู่ข้างใน module — หายเมื่อ reload)
-// → เราเก็บ STATS ไว้ที่ global เพื่อให้ reload ไม่ล้างสถิติ
 function reloadHeart() {
   try {
-    delete require.cache[require.resolve(path.join(__dirname, 'api/chat.js'))];
-    chatRouter = require(path.join(__dirname, 'api/chat.js'));
+    delete require.cache[require.resolve(CHAT_HANDLER_PATH)];
+    chatRouter = require(CHAT_HANDLER_PATH);
     if (global.__STATS) global.__STATS.reloads = (global.__STATS.reloads || 0) + 1;
     return { ok: true, reloaded: new Date().toISOString(), reloads: global.__STATS?.reloads || 0 };
   } catch (e) {
-    return { ok: false, error: e.message };
+    console.error('Hot reload failed:', e.message);
+    return { ok: false, error: 'Hot reload failed' };
   }
 }
 
-http.createServer((req, res) => {
-  const url = req.url.split('?')[0];
-  const R = wrapRes(res); // wrapper สำหรับ SUPER ADMIN API
+const server = http.createServer((req, res) => {
+  const url = (req.url || '/').split('?')[0];
+  const R = wrapRes(res);
 
-  // ---------- 🔓 SUPER ADMIN API (จัดการก่อนทุกอย่าง) ----------
+  // ---------- ADMIN API: every endpoint is authenticated ----------
   if (req.method === 'GET' && url === '/api/sys') {
-    return R.json(sysInfo());
+    const denied = requireAdmin(req, R);
+    if (denied) return;
+    return R.json(sysInfo(req));
   }
 
   if (req.method === 'POST' && url === '/api/unlock') {
-    global.SUPER_ADMIN = !global.SUPER_ADMIN;
-    console.log('🔓 SUPER ADMIN =', global.SUPER_ADMIN);
-    return R.json({ unlocked: unlockState(), message: global.SUPER_ADMIN ? '🔓 ปลดล็อกสุดขีดแล้ว!' : '🔒 ล็อกกลับแล้ว' });
+    const denied = requireAdmin(req, R);
+    if (denied) return;
+    return R.json({ unlocked: true, message: '🔓 SUPER ADMIN authenticated' });
   }
 
   if (req.method === 'POST' && url === '/api/backup') {
+    const denied = requireAdmin(req, R);
+    if (denied) return;
     try {
       const b = createBackup();
       return R.json({ ok: true, ...b, message: 'สำรองข้อมูลสำเร็จ' });
-    } catch (e) { return R.status(500).json({ error: 'สำรองไม่สำเร็จ: ' + e.message }); }
+    } catch (e) {
+      console.error('Backup failed:', e.message);
+      return R.status(500).json({ error: 'สำรองไม่สำเร็จ' });
+    }
   }
 
   if (req.method === 'POST' && url === '/api/reload') {
-    const r = reloadHeart();
-    return R.json(r);
+    const denied = requireAdmin(req, R);
+    if (denied) return;
+    return R.status(reloadHeart().ok ? 200 : 500).json(reloadHeart());
   }
 
-  // ---------- หน้าเว็บ & ไฟล์ static ----------
+  // ---------- Static backup downloads: authenticated only ----------
   if (req.method === 'GET' && url.startsWith('/backups/')) {
+    const denied = requireAdmin(req, R);
+    if (denied) return;
     const f = path.join(BACKUP_DIR, path.basename(url));
     if (fs.existsSync(f)) {
-      res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename="' + path.basename(f) + '"' });
+      res.writeHead(200, {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': 'attachment; filename="' + path.basename(f) + '"',
+        'Cache-Control': 'no-store'
+      });
       return res.end(fs.readFileSync(f));
     }
     res.writeHead(404); return res.end('ไม่พบไฟล์สำรอง');
@@ -122,10 +160,22 @@ http.createServer((req, res) => {
     res.end(fs.readFileSync(page));
   } else {
     let body = '';
-    req.on('data', c => body += c);
+    let size = 0;
+    let tooLarge = false;
+    req.on('data', c => {
+      size += c.length;
+      if (size <= MAX_BODY_BYTES) body += c;
+      else tooLarge = true;
+    });
     req.on('end', () => {
-      try { req.body = JSON.parse(body); } catch { req.body = {}; }
-      chatRouter(req, wrapRes(res)); // ผ่าน hot-reload handler
+      if (tooLarge) return R.status(413).json({ error: 'Request body too large' });
+      try { req.body = body ? JSON.parse(body) : {}; }
+      catch { return R.status(400).json({ error: 'Invalid JSON body' }); }
+      chatRouter(req, wrapRes(res));
     });
   }
-}).listen(process.env.PORT || 3000, () => console.log('🔓 CF Bossnusilelo V.2 (SUPER ADMIN) on :' + (process.env.PORT || 3000)));
+});
+
+server.listen(process.env.PORT || 3000, () => console.log('CF Bossnusilelo server on :' + (process.env.PORT || 3000)));
+
+module.exports = { server, adminAuthorized, requireAdmin };
