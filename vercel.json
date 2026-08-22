@@ -4,8 +4,9 @@
   "installCommand": "npm install",
   "outputDirectory": "public",
   "rewrites": [
-    { "source": "/", "destination": "/chat-v2.html" },
-    { "source": "/chat/:path*", "destination": "/chat-v2.html" }
+    { "source": "/", "destination": "/fleet.html" },
+    { "source": "/chat/:path*", "destination": "/fleet.html" },
+    { "source": "/fleet", "destination": "/fleet.html" }
   ],
   "headers": [
     {
@@ -15,7 +16,7 @@
       ]
     },
     {
-      "source": "/chat-v2.html",
+      "source": "/fleet.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
       ]
