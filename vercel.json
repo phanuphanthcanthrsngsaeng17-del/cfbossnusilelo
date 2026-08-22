@@ -4,15 +4,15 @@
   "installCommand": "npm install",
   "outputDirectory": "public",
   "rewrites": [
-    { "source": "/", "destination": "/chat.html" },
-    { "source": "/chat", "destination": "/chat.html" },
-    { "source": "/chat/:path*", "destination": "/chat.html" },
-    { "source": "/fleet", "destination": "/chat.html" },
-    { "source": "/sandbox", "destination": "/chat.html" },
-    { "source": "/code", "destination": "/chat.html" },
-    { "source": "/chat-v2.html", "destination": "/chat.html" },
-    { "source": "/cf-room.html", "destination": "/chat.html" },
-    { "source": "/sandbox-room.html", "destination": "/chat.html" }
+    { "source": "/", "destination": "/boss-home.html" },
+    { "source": "/chat", "destination": "/boss-home.html" },
+    { "source": "/chat/:path*", "destination": "/boss-home.html" },
+    { "source": "/fleet", "destination": "/boss-home.html" },
+    { "source": "/sandbox", "destination": "/boss-home.html" },
+    { "source": "/code", "destination": "/boss-home.html" },
+    { "source": "/chat-v2.html", "destination": "/boss-home.html" },
+    { "source": "/cf-room.html", "destination": "/boss-home.html" },
+    { "source": "/sandbox-room.html", "destination": "/boss-home.html" }
   ],
   "headers": [
     {
