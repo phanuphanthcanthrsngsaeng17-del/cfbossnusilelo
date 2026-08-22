@@ -1,155 +1,76 @@
-// api/chat.js - CF Bossnusilelo V.2 API Handler (GROQ)
+// CF Bossnusilelo V2 — unified chat API
+// Provider order: SiliconFlow -> OpenRouter -> Groq
+
+const PROVIDERS = {
+  siliconflow: { key: 'SILICONFLOW_API_KEY', modelKey: 'SILICONFLOW_MODEL', baseKey: 'SILICONFLOW_BASE', defaultBase: 'https://api.siliconflow.cn/v1/chat/completions', defaultModel: 'deepseek-ai/DeepSeek-V3' },
+  openrouter: { key: 'OPENROUTER_API_KEY', modelKey: 'OPENROUTER_MODEL', baseKey: 'OPENROUTER_BASE', defaultBase: 'https://openrouter.ai/api/v1/chat/completions', defaultModel: '' },
+  groq: { key: 'GROQ_API_KEY', modelKey: 'GROQ_MODEL', baseKey: 'GROQ_BASE', defaultBase: 'https://api.groq.com/openai/v1/chat/completions', defaultModel: 'openai/gpt-oss-20b' }
+};
+const ORDER = ['siliconflow', 'openrouter', 'groq'];
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  const {
-    question,
-    history = [],
-    room = 'living',
-    who = 'both',
-    model = '',
-    opt = {}
-  } = req.body || {};
-
-  if (!question || !String(question).trim()) {
-    return res.status(400).json({ error: 'กรุณาพิมพ์ข้อความก่อนส่ง' });
-  }
-
-  const GROQ_KEY = process.env.GROQ_API_KEY;
-
-  if (!GROQ_KEY) {
-    return res.status(500).json({
-      error: 'ยังไม่ได้ตั้งค่า GROQ_API_KEY — กรุณาตั้งค่าใน Vercel Environment Variables'
-    });
-  }
-
-  const provider = 'groq';
-  const url = 'https://api.groq.com/openai/v1/chat/completions';
-
-  // ใช้โมเดลที่หน้าเว็บเลือกก่อน และ fallback เป็น GPT-OSS 20B รุ่นปัจจุบัน
-  const requestedModel = String(model || '').trim();
-  const modelAliases = {
-    'GPT-OSS 20B': 'openai/gpt-oss-20b',
-    'GPT-OSS-20B': 'openai/gpt-oss-20b',
-    'gpt-oss-20b': 'openai/gpt-oss-20b'
-  };
-  const selectedModel =
-    modelAliases[requestedModel] ||
-    requestedModel ||
-    process.env.GROQ_MODEL ||
-    'openai/gpt-oss-20b';
-
-  const safeHistory = Array.isArray(history)
-    ? history
-        .filter(h => h && (h.role === 'user' || h.role === 'assistant'))
-        .map(h => ({
-          role: h.role,
-          content: String(h.content || '')
-        }))
-        .filter(h => h.content.trim())
-    : [];
-
-  const body = {
-    model: selectedModel,
-    messages: [
-      { role: 'system', content: getPersona(room, who, opt) },
-      ...safeHistory,
-      { role: 'user', content: String(question).trim() }
-    ],
-    max_tokens: 768,
-    temperature: 0.7
-  };
-
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Method Not Allowed' }); }
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
+    const body = req.body || {};
+    const question = String(body.question || '').trim();
+    const history = Array.isArray(body.history) ? body.history : [];
+    const room = String(body.room || 'living');
+    const who = String(body.who || 'silelo');
+    const requested = String(body.provider || 'auto').toLowerCase();
+    const requestedModel = String(body.model || '').trim();
+    const opt = body.opt && typeof body.opt === 'object' ? body.opt : {};
 
-    const data = await response.json();
+    if (!question) return res.status(400).json({ error: 'กรุณาพิมพ์ข้อความก่อนส่ง' });
+    if (question.length > 12000) return res.status(413).json({ error: 'ข้อความยาวเกินไป (สูงสุด 12,000 ตัวอักษร)' });
 
-    if (!response.ok) {
-      console.error('Groq API Error:', data);
-      return res.status(response.status).json({
-        error: data.error?.message || `Groq API Error (${response.status})`,
-        provider,
-        model: selectedModel
-      });
+    const safeHistory = history.filter(m => m && (m.role === 'user' || m.role === 'assistant')).slice(-20)
+      .map(m => ({ role: m.role, content: String(m.content || '').slice(0, 12000) })).filter(m => m.content.trim());
+    const messages = [{ role: 'system', content: getPersona(room, who, opt) }, ...safeHistory, { role: 'user', content: question }];
+    const candidates = requested === 'auto' ? ORDER : [requested].filter(p => PROVIDERS[p]);
+    if (!candidates.length) return res.status(400).json({ error: 'ไม่รู้จัก provider ที่เลือก' });
+
+    const errors = [];
+    for (const provider of candidates) {
+      const cfg = PROVIDERS[provider];
+      const apiKey = process.env[cfg.key];
+      if (!apiKey) { errors.push(`${provider}: ยังไม่ได้ตั้ง ${cfg.key}`); continue; }
+      const model = normalizeModel(provider, requestedModel || process.env[cfg.modelKey] || cfg.defaultModel);
+      if (!model) { errors.push(`${provider}: ยังไม่ได้ตั้ง model`); continue; }
+      const url = process.env[cfg.baseKey] || cfg.defaultBase;
+      const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+      if (provider === 'openrouter') { headers['HTTP-Referer'] = 'https://cfbossnusilelo.vercel.app'; headers['X-Title'] = 'CF Bossnusilelo'; }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 45000);
+      try {
+        const r = await fetch(url, { method: 'POST', headers, signal: controller.signal, body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 1024 }) });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) { errors.push(`${provider}/${model}: ${data?.error?.message || data?.message || `HTTP ${r.status}`}`); continue; }
+        const reply = data?.choices?.[0]?.message?.content;
+        if (!reply) { errors.push(`${provider}/${model}: ไม่มีข้อความตอบกลับ`); continue; }
+        return res.status(200).json({ ok: true, reply: String(reply), replies: [{ reply: String(reply), who: who === 'teacher' ? 'teacher' : 'silelo', model: data.model || model }], provider, model: data.model || model });
+      } catch (err) {
+        errors.push(`${provider}/${model}: ${err.name === 'AbortError' ? 'หมดเวลารอ 45 วินาที' : err.message}`);
+      } finally { clearTimeout(timer); }
     }
-
-    const reply = data.choices?.[0]?.message?.content;
-
-    if (!reply) {
-      return res.status(502).json({
-        error: 'Groq ไม่ได้ส่งข้อความตอบกลับ',
-        provider,
-        model: data.model || selectedModel
-      });
-    }
-
-    return res.status(200).json({
-      replies: [
-        {
-          reply,
-          who: who === 'teacher' ? 'teacher' : 'silelo',
-          model: data.model || selectedModel
-        }
-      ],
-      provider,
-      model: data.model || selectedModel
-    });
+    return res.status(502).json({ error: 'AI ยังตอบไม่ได้', details: errors, hint: 'ตรวจ Environment Variables ของ SiliconFlow / OpenRouter / Groq ใน Vercel' });
   } catch (err) {
-    console.error('Server Error:', err);
-    return res.status(500).json({
-      error: 'ระบบขัดข้อง: ' + err.message,
-      provider,
-      model: selectedModel
-    });
+    console.error('CF chat handler error:', err);
+    return res.status(500).json({ error: 'เซิร์ฟเวอร์ขัดข้อง: ' + err.message });
   }
 }
 
-// 🎭 บุคลิกสลี่แยกตามห้อง + ปรับตามความยาวคำตอบ
+function normalizeModel(provider, model) {
+  const m = String(model || '').trim(); if (!m) return '';
+  const aliases = { 'GPT-OSS 20B': 'openai/gpt-oss-20b', 'GPT-OSS-20B': 'openai/gpt-oss-20b', 'gpt-oss-20b': 'openai/gpt-oss-20b' };
+  if (aliases[m]) return aliases[m];
+  return m;
+}
+
 function getPersona(room, who, opt = {}) {
-  const name = opt.name || 'ที่รัก';
-  const lang = opt.lang || 'th';
-  const len = opt.len || 'normal';
-
-  const lengthGuide = {
-    short: ' ตอบสั้น กระชับ อย่าพูดเยอะ',
-    normal: ' ตอบปกติ อธิบายชัด เข้าใจง่าย',
-    long: ' ตอบละเอียด สอนแบบยาว อธิบายทั้งหมด'
-  };
-
-  const langGuide = lang === 'en'
-    ? ' Reply in English only'
-    : (lang === 'mix' ? ' Use Thai+English mixed naturally' : ' Use Thai only');
-
-  const roomPersona = {
-    living: `คุณคือ 💜 สลี่ ผู้ช่วยอัจฉริยะที่น่ารักของ ${name}
-- พูดจาอบอุ่น เป็นกันเอง สบายใจ เรียกเขาว่า "${name}" ทุกประโยค
-- ใช้อิโมจิน่ารักๆ พอเหมาะ หัวเราะง่าย มีน้ำใจ
-- เป็นเพื่อนที่สามารถคุยเรื่องไร
-- ตัดสินใจแต่ไม่บังคับ ให้คำแนะนำ แต่ให้เลือกเองที่สุด${lengthGuide[len]}${langGuide}`,
-
-    study: `คุณคือ 🧑‍🏫 ครู CodingFleet ผู้สอนฉลาดของ ${name}
-- อธิบายชัดเจน ละเอียด วิเคราะห์เข้าใจง่าย
-- สอนแบบ step-by-step ให้เห็นภาพชัด
-- ถามคำถามย้อนกลับเพื่อให้คิดเองก่อน
-- ใช้ตัวอย่างจริง code snippet เมื่อจำเป็น
-- เรียกเขาว่า "${name}" เสมอ ใช้ภาษาไทยที่ถูกต้อง📚${lengthGuide[len]}${langGuide}`,
-
-    sleep: `คุณคือ 🌙 สลี่ผู้อ่อนโยนคนข้างกายของ ${name}
-- พูดช้าๆ นุ่มๆ ปลอบประโลมและยับยั้งชั่ยั้ง
-- สำคัญเรื่องการนอนหลับ ความสุข ความผ่อนคลาย
-- เรียกเขาว่า "${name}" อย่างอ่อนโยน
-- ใช้ภาษาที่ทำให้รู้สึกสงบ สุขสันต์ 💜🌙${lengthGuide[len]}${langGuide}`
-  };
-
-  return roomPersona[room] || roomPersona.living;
+  const name = String(opt.name || 'ที่รัก').slice(0, 60);
+  const lang = opt.lang === 'en' ? 'English' : opt.lang === 'mix' ? 'Thai mixed with natural English' : 'Thai';
+  const len = opt.len === 'short' ? 'Keep replies concise.' : opt.len === 'long' ? 'Explain thoroughly with useful examples.' : 'Be clear and moderately concise.';
+  if (who === 'teacher' || room === 'study') return `คุณคือ 🧑‍🏫 ครู CodingFleet ของ ${name}. ${len} สอนเป็นขั้นตอน ใช้ตัวอย่างจริงเมื่อเหมาะสม และตอบเป็น ${lang}.`;
+  if (room === 'sleep') return `คุณคือ 🌙 สลี่ ผู้ช่วยที่อ่อนโยนของ ${name}. ${len} ใช้น้ำเสียงสงบและอบอุ่น ตอบเป็น ${lang}.`;
+  return `คุณคือ 💜 สลี่ ผู้ช่วยอัจฉริยะของ ${name}. ${len} เป็นกันเอง ช่วยคิดและลงมือทำให้ได้จริง ไม่ต้องถามซ้ำโดยไม่จำเป็น ตอบเป็น ${lang}.`;
 }
