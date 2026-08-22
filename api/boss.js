@@ -1,6 +1,7 @@
 // CF Boss Home — Agent entrypoint.
 // Boss Core pipeline: Understand -> Plan -> Model Router -> Tool Router -> Memory -> Execute -> Verify.
 // This endpoint orchestrates the work order and delegates model inference to /api/chat.
+export const config = { maxDuration: 60 };
 import { buildToolContext } from './boss-tools.js';
 
 const MAX_TASK = 12000;
@@ -49,25 +50,32 @@ export default async function handler(req, res) {
     const origin = req.headers['x-forwarded-host'] || req.headers.host;
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const base = `${proto}://${origin}`;
-    const chat = await fetch(`${base}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...body,
-        question: instruction,
-        opt: { ...(body.opt || {}), mode: body.opt?.mode || 'fleet' }
-      })
-    });
-
-    const data = await chat.json().catch(() => ({}));
-    return res.status(chat.status).json({
-      ...data,
-      agent: 'cf-boss',
-      corePipeline: ['Understand','Plan','Model Router','Tool Router','Memory','Execute','Verify'],
-      tools: toolContext.split('\n').filter(Boolean).map(line => line.replace(/^- /, ''))
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 55000);
+    try {
+      const chat = await fetch(`${base}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          ...body,
+          question: instruction,
+          opt: { ...(body.opt || {}), mode: body.opt?.mode || 'fleet' }
+        })
+      });
+      const data = await chat.json().catch(() => ({}));
+      return res.status(chat.status).json({
+        ...data,
+        agent: 'cf-boss',
+        corePipeline: ['Understand','Plan','Model Router','Tool Router','Memory','Execute','Verify'],
+        tools: toolContext.split('\n').filter(Boolean).map(line => line.replace(/^- /, ''))
+      });
+    } finally {
+      clearTimeout(timer);
+    }
   } catch (err) {
     console.error('CF Boss agent error:', err);
-    return res.status(500).json({ error: 'Boss Agent ขัดข้อง: ' + err.message });
+    const message = err?.name === 'AbortError' ? 'Boss Agent ใช้เวลานานเกินกำหนดและถูกหยุดเพื่อไม่ให้แชทค้าง' : 'Boss Agent ขัดข้อง: ' + err.message;
+    return res.status(err?.name === 'AbortError' ? 504 : 500).json({ error: message, code: err?.name === 'AbortError' ? 'AGENT_TIMEOUT' : 'AGENT_ERROR' });
   }
 }
