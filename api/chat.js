@@ -1,7 +1,7 @@
 // CF Bossnusilelo V2 — unified multi-provider chat API
-// Auto order prioritizes providers that are configured. Keys stay server-side.
+// Keys stay server-side. Auto skips missing/failed providers.
 const PROVIDERS = {
-  siliconflow: { label:'SiliconFlow', key:'SILICONFLOW_API_KEY', modelKey:'SILICONFLOW_MODEL', baseKey:'SILICONFLOW_BASE', defaultBase:'https://api.siliconflow.cn/v1/chat/completions', defaultModel:'deepseek-ai/DeepSeek-V3' },
+  siliconflow: { label:'SiliconFlow', key:'SILICONFLOW_API_KEY', modelKey:'SILICONFLOW_MODEL', baseKey:'SILICONFLOW_BASE', defaultBase:'https://api.siliconflow.cn/v1/chat/completions', defaultModel:'deepseek-ai/DeepSeek-V3.2' },
   qwen: { label:'Qwen / Alibaba DashScope', key:'DASHSCOPE_API_KEY', modelKey:'DASHSCOPE_MODEL', baseKey:'DASHSCOPE_BASE', defaultBase:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', defaultModel:'qwen3.6-flash' },
   deepseek: { label:'DeepSeek', key:'DEEPSEEK_API_KEY', modelKey:'DEEPSEEK_MODEL', baseKey:'DEEPSEEK_BASE', defaultBase:'https://api.deepseek.com/chat/completions', defaultModel:'deepseek-v4-flash' },
   zhipu: { label:'Z.ai / GLM', key:'ZHIPU_API_KEY', modelKey:'ZHIPU_MODEL', baseKey:'ZHIPU_BASE', defaultBase:'https://open.bigmodel.cn/api/paas/v4/chat/completions', defaultModel:'glm-4-flash-250414' },
@@ -12,23 +12,28 @@ const PROVIDERS = {
   baichuan: { label:'Baichuan', key:'BAICHUAN_API_KEY', modelKey:'BAICHUAN_MODEL', baseKey:'BAICHUAN_BASE', defaultBase:'https://api.baichuan-ai.com/v1/chat/completions', defaultModel:'Baichuan4-Air' },
   spark: { label:'iFlytek Spark', key:'SPARK_API_KEY', modelKey:'SPARK_MODEL', baseKey:'SPARK_BASE', defaultBase:'https://spark-api-open.xf-yun.com/v1/chat/completions', defaultModel:'4.0Ultra' },
   ernie: { label:'Baidu ERNIE / Qianfan', key:'ERNIE_API_KEY', modelKey:'ERNIE_MODEL', baseKey:'ERNIE_BASE', defaultBase:'https://qianfan.baidubce.com/v2/chat/completions', defaultModel:'ernie-4.5-turbo-128k' },
-  openrouter: { label:'OpenRouter', key:'OPENROUTER_API_KEY', modelKey:'OPENROUTER_MODEL', baseKey:'OPENROUTER_BASE', defaultBase:'https://openrouter.ai/api/v1/chat/completions', defaultModel:'' },
+  openrouter: { label:'OpenRouter', key:'OPENROUTER_API_KEY', modelKey:'OPENROUTER_MODEL', baseKey:'OPENROUTER_BASE', defaultBase:'https://openrouter.ai/api/v1/chat/completions', defaultModel:'openrouter/free' },
   groq: { label:'Groq', key:'GROQ_API_KEY', modelKey:'GROQ_MODEL', baseKey:'GROQ_BASE', defaultBase:'https://api.groq.com/openai/v1/chat/completions', defaultModel:'openai/gpt-oss-20b' }
 };
 const ORDER = ['siliconflow','qwen','deepseek','zhipu','moonshot','minimax','doubao','hunyuan','baichuan','spark','ernie','openrouter','groq'];
+const MODEL_CATALOG = {
+  siliconflow:['deepseek-ai/DeepSeek-V3.2','deepseek-ai/DeepSeek-R1-0528','Qwen/Qwen3-235B-A22B-Instruct-2507'],
+  qwen:['qwen3.6-flash','qwen3.7-flash','qwen3.7-plus'], deepseek:['deepseek-v4-flash','deepseek-v4-pro'],
+  zhipu:['glm-4-flash-250414','glm-4.5-air','glm-5'], moonshot:['moonshot-v1-8k','kimi-k2.5'],
+  minimax:['MiniMax-M2.7','MiniMax-M2.5'], doubao:[], hunyuan:['hunyuan-lite'], baichuan:['Baichuan4-Air'],
+  spark:['4.0Ultra'], ernie:['ernie-4.5-turbo-128k'], openrouter:['openrouter/free'],
+  groq:['openai/gpt-oss-20b','openai/gpt-oss-120b']
+};
 
 export default async function handler(req,res){
   if(req.method==='GET'){
-    const providers=Object.fromEntries(ORDER.map(name=>{const c=PROVIDERS[name];return [name,{label:c.label,configured:Boolean(process.env[c.key]),model:normalizeModel(name,process.env[c.modelKey]||c.defaultModel)||null}]}));
+    const providers=Object.fromEntries(ORDER.map(name=>{const c=PROVIDERS[name];return [name,{label:c.label,configured:Boolean(process.env[c.key]),model:normalizeModel(name,process.env[c.modelKey]||c.defaultModel)||null,models:MODEL_CATALOG[name]||[]}]}));
     return res.status(200).json({ok:true,service:'CF Bossnusilelo Chat API',providers,order:ORDER});
   }
   if(req.method!=='POST'){res.setHeader('Allow','GET, POST');return res.status(405).json({error:'Method Not Allowed'});}
   try{
-    const body=req.body||{}, question=String(body.question||'').trim();
-    const history=Array.isArray(body.history)?body.history:[];
-    const room=String(body.room||'living'), who=String(body.who||'silelo');
-    const requested=String(body.provider||'auto').toLowerCase();
-    const requestedModel=String(body.model||'').trim();
+    const body=req.body||{}, question=String(body.question||'').trim(), history=Array.isArray(body.history)?body.history:[];
+    const room=String(body.room||'living'), who=String(body.who||'silelo'), requested=String(body.provider||'auto').toLowerCase(), requestedModel=String(body.model||'').trim();
     const opt=body.opt&&typeof body.opt==='object'?body.opt:{};
     if(!question)return res.status(400).json({error:'กรุณาพิมพ์ข้อความก่อนส่ง'});
     if(question.length>12000)return res.status(413).json({error:'ข้อความยาวเกินไป (สูงสุด 12,000 ตัวอักษร)'});
