@@ -1,6 +1,6 @@
 // CF Boss Home — Agent entrypoint.
-// v1: centralizes planning context and delegates model inference to /api/chat.
-// Tool execution remains permission-gated behind dedicated APIs.
+// Boss Core pipeline: Understand -> Plan -> Model Router -> Tool Router -> Memory -> Execute -> Verify.
+// This endpoint orchestrates the work order and delegates model inference to /api/chat.
 import { buildToolContext } from './boss-tools.js';
 
 const MAX_TASK = 12000;
@@ -19,14 +19,27 @@ export default async function handler(req, res) {
     if (question.length > MAX_TASK) return res.status(413).json({ error: 'งานยาวเกินไป' });
 
     const toolContext = buildToolContext();
+    const pipeline = [
+      '1. UNDERSTAND — identify the goal, constraints, context, success criteria and what is already known.',
+      '2. PLAN — make an ordered plan, dependencies and safest useful next action. Do not ask the user to choose technical implementation details when Boss can decide them.',
+      '3. MODEL ROUTER — choose the best currently available model/provider/runtime for the task. Auto-skip missing keys, unhealthy providers and unsuitable models. Do not advertise unavailable models as usable.',
+      '4. TOOL ROUTER — select only the tools required for the plan and respect their scopes and permissions.',
+      '5. MEMORY — use the current conversation/project context and reusable decisions when available. Treat recent user requirements as active product requirements.',
+      '6. EXECUTE — perform only actions actually available to the system. Never claim a file was changed, deployed, tested or inspected unless an execution result proves it.',
+      '7. VERIFY — after any consequential change, verify observed behavior and report what passed, what failed and what remains. Deploy success is not the same as feature success.',
+    ].join('\n');
+
     const instruction = [
       'CF BOSS AGENT — WORK ORDER',
-      'You are the lead driver of CF Boss Home.',
-      'Choose tools based on the goal. Do not claim a tool was executed unless the system actually executed it.',
-      'Before any consequential action, respect scope, permission and least privilege.',
-      'After a change, require verification. If a tool is unavailable, say so and continue with the safest useful step.',
+      'You are the lead driver of CF Boss Home. The chat is the communication surface; Boss Core is the processing system behind it.',
+      'Apply the following pipeline to every request, adapting depth to the task:',
+      pipeline,
       '',
-      'AVAILABLE TOOL REGISTRY:',
+      'CONTINUOUS PRODUCT RULE:',
+      'Treat explicit user decisions in this conversation as ongoing CF Boss Home requirements. When implementing work, preserve compatible prior decisions and improve the app toward them instead of resetting to a generic chatbot design.',
+      'Current architectural direction: Boss Core is separate from Chat; Chat is only an interface. The home should be cloud-first for customers, keep model/provider details behind Auto routing, support cloud and local model infrastructure without requiring customers to download model files, and remain extensible for multiple model formats/runtimes and future bot templates.',
+      '',
+      'AVAILABLE CAPABILITY REGISTRY:',
       toolContext,
       '',
       'USER GOAL:',
@@ -50,6 +63,7 @@ export default async function handler(req, res) {
     return res.status(chat.status).json({
       ...data,
       agent: 'cf-boss',
+      corePipeline: ['Understand','Plan','Model Router','Tool Router','Memory','Execute','Verify'],
       tools: toolContext.split('\n').filter(Boolean).map(line => line.replace(/^- /, ''))
     });
   } catch (err) {
