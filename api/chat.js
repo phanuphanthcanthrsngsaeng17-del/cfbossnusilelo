@@ -3,11 +3,19 @@
 
 const ALLOWED_ROOMS = new Set(['living', 'study', 'sleep']);
 const ALLOWED_WHO = new Set(['both', 'silelo', 'teacher']);
+const ALLOWED_LANG = new Set(['th', 'en', 'mix']);
+const ALLOWED_LEN = new Set(['short', 'normal', 'long']);
 const MAX_HISTORY = 40;
+const MAX_QUESTION_CHARS = 4000;
+const MAX_HISTORY_CONTENT_CHARS = 4000;
+
+function error(res, status, message) {
+  return res.status(status).json({ error: message });
+}
 
 async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return error(res, 405, 'Method Not Allowed');
   }
 
   const body = req.body && typeof req.body === 'object' ? req.body : {};
@@ -20,33 +28,50 @@ async function handler(req, res) {
   } = body;
 
   if (typeof question !== 'string' || question.trim().length === 0) {
-    return res.status(400).json({ error: 'กรุณาระบุ question' });
+    return error(res, 400, 'กรุณาระบุ question');
+  }
+  const trimmedQuestion = question.trim();
+  if (trimmedQuestion.length > MAX_QUESTION_CHARS) {
+    return error(res, 400, `question ยาวเกิน ${MAX_QUESTION_CHARS} ตัวอักษร`);
   }
   if (!ALLOWED_ROOMS.has(room)) {
-    return res.status(400).json({ error: 'room ไม่ถูกต้อง' });
+    return error(res, 400, 'room ไม่ถูกต้อง');
   }
   if (!ALLOWED_WHO.has(who)) {
-    return res.status(400).json({ error: 'who ไม่ถูกต้อง' });
+    return error(res, 400, 'who ไม่ถูกต้อง');
+  }
+  if (opt !== null && (typeof opt !== 'object' || Array.isArray(opt))) {
+    return error(res, 400, 'opt ไม่ถูกต้อง');
   }
 
   const safeHistory = Array.isArray(history)
-    ? history.slice(-MAX_HISTORY).filter(h => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string')
+    ? history.slice(-MAX_HISTORY).filter(h =>
+      h &&
+      (h.role === 'user' || h.role === 'assistant') &&
+      typeof h.content === 'string' &&
+      h.content.trim().length > 0 &&
+      h.content.length <= MAX_HISTORY_CONTENT_CHARS
+    )
     : [];
+
+  const safeOpt = opt || {};
+  const lang = typeof safeOpt.lang === 'string' && ALLOWED_LANG.has(safeOpt.lang) ? safeOpt.lang : 'th';
+  const len = typeof safeOpt.len === 'string' && ALLOWED_LEN.has(safeOpt.len) ? safeOpt.len : 'normal';
 
   const GROQ_KEY = process.env.GROQ_API_KEY;
   if (!GROQ_KEY) {
-    return res.status(503).json({ error: 'ยังไม่ได้ตั้งค่า GROQ_API_KEY' });
+    return error(res, 503, 'ยังไม่ได้ตั้งค่า GROQ_API_KEY');
   }
 
-  const model = process.env.GROQ_MODEL || 'mixtral-8x7b-32768';
+  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
   const provider = 'groq';
   const url = 'https://api.groq.com/openai/v1/chat/completions';
   const payload = {
     model,
     messages: [
-      { role: 'system', content: getPersona(room, who, opt) },
-      ...safeHistory.map(h => ({ role: h.role, content: h.content })),
-      { role: 'user', content: question.trim() }
+      { role: 'system', content: getPersona(room, who, { ...safeOpt, lang, len }) },
+      ...safeHistory.map(h => ({ role: h.role, content: h.content.trim() })),
+      { role: 'user', content: trimmedQuestion }
     ],
     max_tokens: 768,
     temperature: 0.7
@@ -66,7 +91,7 @@ async function handler(req, res) {
     try { data = await response.json(); } catch { /* non-JSON provider response */ }
 
     if (!response.ok) {
-      console.error('Groq API Error:', data);
+      console.error('Groq API request failed:', response.status);
       return res.status(502).json({
         error: 'ผู้ให้บริการ AI ตอบกลับผิดพลาด',
         provider
@@ -83,7 +108,7 @@ async function handler(req, res) {
       provider
     });
   } catch (err) {
-    console.error('Server Error:', err);
+    console.error('AI provider request failed:', err.message);
     return res.status(502).json({
       error: 'เชื่อมต่อผู้ให้บริการ AI ไม่สำเร็จ',
       provider
