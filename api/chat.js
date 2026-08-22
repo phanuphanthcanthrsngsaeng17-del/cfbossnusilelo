@@ -9,7 +9,18 @@ const PROVIDERS = {
 const ORDER = ['siliconflow', 'openrouter', 'groq'];
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Method Not Allowed' }); }
+  // Lightweight health/config check. Never expose secret values.
+  if (req.method === 'GET') {
+    const providers = Object.fromEntries(ORDER.map(name => {
+      const cfg = PROVIDERS[name];
+      const configured = Boolean(process.env[cfg.key]);
+      const model = normalizeModel(name, process.env[cfg.modelKey] || cfg.defaultModel);
+      return [name, { configured, model: model || null }];
+    }));
+    return res.status(200).json({ ok: true, service: 'CF Bossnusilelo Chat API', providers, order: ORDER });
+  }
+
+  if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return res.status(405).json({ error: 'Method Not Allowed' }); }
   try {
     const body = req.body || {};
     const question = String(body.question || '').trim();
