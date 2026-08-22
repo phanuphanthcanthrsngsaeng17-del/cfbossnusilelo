@@ -1,0 +1,3 @@
+CF Bossnusilelo V2 deployment marker
+Build: 2026-08-22
+Purpose: trigger Vercel deployment from main and verify the connected project is deploying the latest GitHub revision.
