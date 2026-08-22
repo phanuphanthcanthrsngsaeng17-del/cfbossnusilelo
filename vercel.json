@@ -6,7 +6,8 @@
   "rewrites": [
     { "source": "/", "destination": "/fleet.html" },
     { "source": "/chat/:path*", "destination": "/fleet.html" },
-    { "source": "/fleet", "destination": "/fleet.html" }
+    { "source": "/fleet", "destination": "/fleet.html" },
+    { "source": "/code", "destination": "/code.html" }
   ],
   "headers": [
     {
@@ -17,6 +18,12 @@
     },
     {
       "source": "/fleet.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/code.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
       ]
