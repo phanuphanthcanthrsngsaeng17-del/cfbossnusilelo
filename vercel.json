@@ -3,18 +3,13 @@
   "framework": null,
   "installCommand": "npm install",
   "outputDirectory": "public",
-  "rewrites": [
-    { "source": "/", "destination": "/cf-room.html" },
-    { "source": "/chat/:path*", "destination": "/cf-room.html" },
-    { "source": "/fleet", "destination": "/cf-room.html" },
-    { "source": "/sandbox", "destination": "/cf-room.html" },
-    { "source": "/code", "destination": "/cf-room.html" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0, must-revalidate" }
+        { "key": "Cache-Control", "value": "no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate" },
+        { "key": "Pragma", "value": "no-cache" },
+        { "key": "Expires", "value": "0" }
       ]
     }
   ]
