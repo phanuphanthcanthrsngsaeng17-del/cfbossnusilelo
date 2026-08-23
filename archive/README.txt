@@ -1,0 +1,1 @@
+Archived API modules moved out of /api to keep Vercel Hobby deployment under the 12-function limit. Original source is preserved in this archive.
