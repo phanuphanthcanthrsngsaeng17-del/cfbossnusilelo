@@ -1,18 +1,1 @@
-{
-  "$schema":"https://openapi.vercel.sh/vercel.json",
-  "framework":null,
-  "installCommand":"npm install",
-  "outputDirectory":"public",
-  "rewrites":[
-    {"source":"/","destination":"/boss-home.html"},
-    {"source":"/chat","destination":"/boss-home.html"},
-    {"source":"/chat/:path*","destination":"/jarvis-living-key.html"},
-    {"source":"/fleet","destination":"/boss-home.html"},
-    {"source":"/sandbox","destination":"/boss-home.html"},
-    {"source":"/code","destination":"/boss-home.html"},
-    {"source":"/chat-v2.html","destination":"/boss-home.html"},
-    {"source":"/cf-room.html","destination":"/boss-home.html"},
-    {"source":"/sandbox-room.html","destination":"/boss-home.html"}
-  ],
-  "headers":[{"source":"/(.*)","headers":[{"key":"Cache-Control","value":"no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"},{"key":"Pragma","value":"no-cache"},{"key":"Expires","value":"0"}]}]
-}
+{"$schema":"https://openapi.vercel.sh/vercel.json","framework":null,"installCommand":"npm install","outputDirectory":"public","rewrites":[{"source":"/","destination":"/login.html"},{"source":"/login","destination":"/login.html"},{"source":"/chat","destination":"/api/chat-entry"},{"source":"/chat/:path*","destination":"/jarvis-living-key.html"},{"source":"/fleet","destination":"/boss-home.html"},{"source":"/sandbox","destination":"/boss-home.html"},{"source":"/code","destination":"/boss-home.html"},{"source":"/chat-v2.html","destination":"/boss-home.html"},{"source":"/cf-room.html","destination":"/boss-home.html"},{"source":"/sandbox-room.html","destination":"/boss-home.html"}],"headers":[{"source":"/(.*)","headers":[{"key":"Cache-Control","value":"no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"},{"key":"Pragma","value":"no-cache"},{"key":"Expires","value":"0"}]}]}
